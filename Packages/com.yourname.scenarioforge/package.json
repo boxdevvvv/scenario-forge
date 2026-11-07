@@ -1,0 +1,15 @@
+{
+  "name": "com.yourname.scenarioforge",
+  "version": "0.1.0",
+  "displayName": "Scenario Forge",
+  "description": "Author step-by-step procedures (trainings, tutorials, linear missions, safety checklists) in an editor window, and run them with a testable, event-driven runtime.",
+  "unity": "6000.6",
+  "license": "MIT",
+  "keywords": ["scenario", "procedure", "tutorial", "training", "editor-tool", "checklist"],
+  "author": {
+    "name": "Carlos Llanquinao"
+  },
+  "dependencies": {
+    "com.unity.nuget.newtonsoft-json": "3.2.2"
+  }
+}
