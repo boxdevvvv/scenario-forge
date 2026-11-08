@@ -15,3 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scene components: `ScenarioRunnerBehaviour`, `ScenarioTarget` and `ScenarioSignalEmitter`.
 - Scenario Forge window (`Window/Scenario Forge`, double-click on an asset, or the Inspector button): reorderable step list with search, context menu and shortcuts, a searchable Add Step menu, a details panel and Undo support for every action.
 - Custom Inspector for `ScenarioDefinition` and a UI Toolkit drawer for `BlackboardValue`.
+- `ScenarioValidator` with scenario and step rules, plus editor checks for missing step types and scene targets.
+- Validation panel in the window (severity filters, click to select the step), issue icons on each step row and a validation summary in the Inspector.
+- `ScenarioForge.Editor.BatchValidation.ValidateAllScenarios` for CI (`-executeMethod`) and the `Tools/Scenario Forge/Validate All Scenarios` menu.
+- `ITargetReferencingStep`, so custom steps can have their target ids checked.

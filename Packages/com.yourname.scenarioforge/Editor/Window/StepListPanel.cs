@@ -185,7 +185,7 @@ namespace ScenarioForge.Editor
 
             SerializedProperty element0 = steps.GetArrayElementAtIndex(stepIndex);
             var step = element0.managedReferenceValue as ScenarioStep;
-            string missingType = step == null ? MissingTypes.GetTypeName(scenario.targetObject, element0.managedReferenceId) : null;
+            string missingType = step == null ? MissingTypes.GetTypeNameAt((ScenarioDefinition)scenario.targetObject, stepIndex) : null;
             row.Bind(stepIndex, step, missingType);
             DecorateRow?.Invoke(row);
         }

@@ -84,6 +84,28 @@ namespace ScenarioForge.Editor
             return steps.arraySize == 0 ? -1 : Mathf.Min(index, steps.arraySize - 1);
         }
 
+        /// <summary>
+        /// Deletes a step whose type is missing and drops its stored data from the asset. This cannot be undone,
+        /// because Unity cannot restore data for a class that does not exist.
+        /// </summary>
+        public static int RemoveMissingStep(SerializedObject scenario, int index)
+        {
+            scenario.Update();
+            SerializedProperty steps = GetSteps(scenario);
+            if (index < 0 || index >= steps.arraySize)
+                return -1;
+
+            var definition = (ScenarioDefinition)scenario.targetObject;
+            bool isMissing = MissingTypes.FindInSteps(definition).TryGetValue(index, out var missing);
+            int next = DeleteStep(scenario, index);
+            if (isMissing)
+                SerializationUtility.ClearManagedReferenceWithMissingType(definition, missing.ReferenceId);
+
+            Undo.SetCurrentGroupName(RemoveMissingUndo);
+            scenario.Update();
+            return next;
+        }
+
         /// <summary>Inserts a copy of the step at <paramref name="index"/> right after it, with a new id.</summary>
         /// <returns>The index of the copy, or <c>-1</c> when the step is missing.</returns>
         public static int DuplicateStep(SerializedObject scenario, int index)

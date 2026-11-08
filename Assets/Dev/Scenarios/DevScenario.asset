@@ -30,7 +30,7 @@ MonoBehaviour:
       data:
         id: f39118f8edaf44c98e665ff919941492
         title: Read the briefing
-        instruction: 
+        instruction: Read the briefing, then press Confirm.
         timeoutSeconds: 0
         onFailure: 0
         maxRetries: 0
@@ -46,41 +46,45 @@ MonoBehaviour:
         timeoutSeconds: 0
         onFailure: 0
         maxRetries: 0
-        signal: 
+        signal: door_opened
         requiredCount: 1
     - rid: 8825433670872465622
       type: {class: ChecklistStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
         id: 6b6e0dc1e345446e8cbc6e565c8e29b8
-        title: 
-        instruction: 
+        title: Pre-check
+        instruction: Check the parts
         timeoutSeconds: 0
         onFailure: 0
         maxRetries: 0
-        items: []
+        items:
+        - label: Part A
+          signal: part_a
+        - label: Part B
+          signal: part_b
         ordered: 0
     - rid: 8825433670872465623
       type: {class: ReachTargetStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
         id: 61a57f0fa2a64137b600f5bb78cc71ff
-        title: 
+        title: Drive to dock
         instruction: 
         timeoutSeconds: 0
         onFailure: 0
         maxRetries: 0
-        actorTargetId: 
-        destinationTargetId: 
+        actorTargetId: cart
+        destinationTargetId: dock
         radius: 1
     - rid: 8825433670872465624
       type: {class: SetBlackboardValueStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
         id: c3977fc0c376418a86038c998e85f758
-        title: 
+        title: Mark assembled
         instruction: 
         timeoutSeconds: 0
         onFailure: 0
         maxRetries: 0
-        key: 
+        key: assembled
         value:
           type: 0
           boolValue: 1
@@ -91,12 +95,12 @@ MonoBehaviour:
       type: {class: BlackboardConditionStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
         id: 5b4842a54f394b41987eba54d340be7c
-        title: 
+        title: Wait until assembled
         instruction: 
         timeoutSeconds: 0
         onFailure: 0
         maxRetries: 0
-        key: 
+        key: assembled
         op: 0
         value:
           type: 0
@@ -109,7 +113,7 @@ MonoBehaviour:
       type: {class: WaitStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
         id: d1dae33d425949e9b638df6465b66d26
-        title: 
+        title: Final wait
         instruction: 
         timeoutSeconds: 0
         onFailure: 0

@@ -33,6 +33,9 @@ namespace ScenarioForge.Editor
         StepDetailsPanel detailsPanel;
         Label statusLabel;
         VisualElement changeTracker;
+        ValidationPanel validationPanel;
+        ValidationReport lastReport;
+        IVisualElementScheduledItem pendingValidation;
 
         /// <summary>The scenario being edited, or <c>null</c> for the empty state.</summary>
         public ScenarioDefinition Scenario => scenario;
@@ -47,6 +50,11 @@ namespace ScenarioForge.Editor
         internal StepDetailsPanel DetailsPanel => detailsPanel;
 
         internal string StatusMessage => statusLabel?.text;
+
+        internal ValidationPanel ValidationPanel => validationPanel;
+
+        /// <summary>The result of the last validation, or <c>null</c> when no scenario is open.</summary>
+        internal ValidationReport LastReport => lastReport;
 
         static string LastScenarioPrefKey => LastScenarioPrefKeyPrefix + PlayerSettings.productGUID;
 
@@ -113,12 +121,14 @@ namespace ScenarioForge.Editor
         {
             Undo.undoRedoPerformed += OnUndoRedo;
             EditorApplication.projectChanged += OnProjectChanged;
+            EditorApplication.hierarchyChanged += ScheduleValidation;
         }
 
         void OnDisable()
         {
             Undo.undoRedoPerformed -= OnUndoRedo;
             EditorApplication.projectChanged -= OnProjectChanged;
+            EditorApplication.hierarchyChanged -= ScheduleValidation;
         }
 
         void CreateGUI()
@@ -144,6 +154,9 @@ namespace ScenarioForge.Editor
             split.Add(listPanel);
             split.Add(detailsPanel);
             editorArea.Add(split);
+            validationPanel = new ValidationPanel();
+            validationPanel.IssueClicked += OnIssueClicked;
+            editorArea.Add(validationPanel);
             root.Add(editorArea);
 
             statusLabel = new Label();
@@ -154,6 +167,7 @@ namespace ScenarioForge.Editor
             listPanel.StepMoved += OnStepMoved;
             listPanel.CommandRequested += OnListCommand;
             listPanel.PopulateContextMenu = PopulateRowMenu;
+            listPanel.DecorateRow = DecorateRow;
             detailsPanel.CommandRequested += OnDetailsCommand;
             root.RegisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
 
@@ -177,6 +191,10 @@ namespace ScenarioForge.Editor
 
             addStepButton = new ToolbarButton(ShowAddStepMenu) { text = "+ Add Step", tooltip = "Add a step after the selected one." };
             toolbar.Add(addStepButton);
+
+            var validateButton = new ToolbarButton(ValidateNow) { text = "Validate", tooltip = "Check the scenario for problems." };
+            validateButton.name = "validateButton";
+            toolbar.Add(validateButton);
 
             var spacer = new ToolbarSpacer();
             spacer.AddToClassList("sf-toolbar__spacer");
@@ -219,8 +237,67 @@ namespace ScenarioForge.Editor
             searchField.SetEnabled(hasScenario);
 
             TrackChanges();
+            RunValidation();
             listPanel.SetScenario(serializedScenario);
             SelectStep(selectedIndex);
+        }
+
+        /// <summary>Validates the scenario now and refreshes the validation panel and row icons.</summary>
+        internal void RunValidation()
+        {
+            pendingValidation?.Pause();
+            pendingValidation = null;
+            lastReport = scenario != null ? EditorScenarioValidation.Validate(scenario, checkSceneTargets: true) : null;
+            validationPanel?.SetReport(lastReport, scenario);
+            listPanel?.ForEachRow(DecorateRow);
+        }
+
+        void ValidateNow()
+        {
+            RunValidation();
+            if (lastReport != null)
+                ShowStatus("Validation: " + EditorScenarioValidation.Summarize(lastReport) + ".", lastReport.HasErrors);
+        }
+
+        void ScheduleValidation()
+        {
+            if (scenario == null || rootVisualElement.panel == null)
+                return;
+
+            if (pendingValidation != null)
+            {
+                pendingValidation.ExecuteLater(250);
+                return;
+            }
+
+            pendingValidation = rootVisualElement.schedule.Execute(RunValidation).StartingIn(250);
+        }
+
+        void DecorateRow(StepRow row)
+        {
+            row.Issues.Clear();
+            ValidationSeverity? worst = lastReport?.GetWorstSeverity(row.StepIndex);
+            if (!worst.HasValue)
+                return;
+
+            Image icon = ValidationPanel.Icon(ValidationPanel.SeverityIcon(worst.Value));
+            icon.AddToClassList("sf-row__issue");
+            icon.tooltip = string.Join("\n", System.Linq.Enumerable.Select(
+                System.Linq.Enumerable.Where(lastReport.Issues, issue => issue.StepIndex == row.StepIndex),
+                issue => issue.Message));
+            row.Issues.Add(icon);
+        }
+
+        void OnIssueClicked(int index)
+        {
+            if (listPanel.IsFiltering)
+            {
+                searchField.value = string.Empty;
+                listPanel.SetFilter(string.Empty);
+            }
+
+            SelectStep(index);
+            listPanel.FocusList();
         }
 
         void TrackChanges()
@@ -233,7 +310,11 @@ namespace ScenarioForge.Editor
             changeTracker = new VisualElement();
             changeTracker.AddToClassList("sf-hidden");
             rootVisualElement.Add(changeTracker);
-            changeTracker.TrackSerializedObjectValue(serializedScenario, _ => listPanel.RefreshRows());
+            changeTracker.TrackSerializedObjectValue(serializedScenario, _ =>
+            {
+                listPanel.RefreshRows();
+                ScheduleValidation();
+            });
         }
 
         void AddStepAt(Type type, int index)
@@ -248,6 +329,7 @@ namespace ScenarioForge.Editor
 
         void AfterStructureChange(int indexToSelect)
         {
+            RunValidation();
             listPanel.Rebuild();
             SelectStep(indexToSelect);
         }
@@ -359,7 +441,17 @@ namespace ScenarioForge.Editor
                 return;
 
             int deleted = selectedIndex;
-            int next = ScenarioEditOperations.DeleteStep(serializedScenario, selectedIndex);
+            bool missing = ScenarioEditOperations.GetStep(serializedScenario, selectedIndex) == null;
+            if (missing && !EditorUtility.DisplayDialog(
+                    "Remove missing step",
+                    "Remove this step and its stored data? Its class does not exist, so this cannot be undone.",
+                    "Remove",
+                    "Cancel"))
+                return;
+
+            int next = missing
+                ? ScenarioEditOperations.RemoveMissingStep(serializedScenario, selectedIndex)
+                : ScenarioEditOperations.DeleteStep(serializedScenario, selectedIndex);
             AfterStructureChange(next);
             ShowStatus($"Deleted step {deleted + 1}.");
             listPanel.FocusList();
@@ -452,6 +544,7 @@ namespace ScenarioForge.Editor
             }
 
             serializedScenario.Update();
+            RunValidation();
             listPanel?.Rebuild();
             SelectStep(Mathf.Min(selectedIndex, ScenarioEditOperations.GetStepCount(serializedScenario) - 1));
         }

@@ -84,7 +84,7 @@ namespace ScenarioForge.Editor
             SerializedProperty element = steps.GetArrayElementAtIndex(index);
             if (element.managedReferenceValue is not ScenarioStep step)
             {
-                ShowMissing(scenario, element);
+                ShowMissing(scenario, index);
                 return;
             }
 
@@ -112,9 +112,9 @@ namespace ScenarioForge.Editor
             SetVisible(false);
         }
 
-        void ShowMissing(SerializedObject scenario, SerializedProperty element)
+        void ShowMissing(SerializedObject scenario, int index)
         {
-            string typeName = MissingTypes.GetTypeName(scenario.targetObject, element.managedReferenceId) ?? "(unknown)";
+            string typeName = MissingTypes.GetTypeNameAt((ScenarioDefinition)scenario.targetObject, index) ?? "(unknown)";
             typeLabel.text = "Missing type";
             typeLabel.tooltip = typeName;
 

@@ -38,7 +38,10 @@ namespace ScenarioForge.Editor
         {
             serializedObject.Update();
             int count = serializedObject.FindProperty(ScenarioDefinition.StepsPropertyName).arraySize;
-            summary.text = count == 1 ? "1 step" : $"{count} steps";
+            ValidationReport report = EditorScenarioValidation.Validate((ScenarioDefinition)target, checkSceneTargets: false);
+            string steps = count == 1 ? "1 step" : $"{count} steps";
+            summary.text = $"{steps}  ·  {EditorScenarioValidation.Summarize(report)}";
+            summary.EnableInClassList("sf-inspector__summary--error", report.HasErrors);
         }
     }
 }

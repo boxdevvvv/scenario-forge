@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ScenarioForge.Steps
@@ -6,7 +7,7 @@ namespace ScenarioForge.Steps
     /// <summary>Completes when an actor target is within a radius of a destination target.</summary>
     [Serializable]
     [ScenarioStepMenu("Spatial/Reach Target", Tooltip = "Completes when the actor is within a radius of the destination.")]
-    public sealed class ReachTargetStep : ScenarioStep
+    public sealed class ReachTargetStep : ScenarioStep, ITargetReferencingStep
     {
         [SerializeField] string actorTargetId;
         [SerializeField] string destinationTargetId;
@@ -31,6 +32,16 @@ namespace ScenarioForge.Steps
         {
             get => radius;
             internal set => radius = value;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<string> TargetIds
+        {
+            get
+            {
+                yield return actorTargetId;
+                yield return destinationTargetId;
+            }
         }
 
         /// <inheritdoc />
