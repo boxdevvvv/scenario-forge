@@ -1,0 +1,17 @@
+{
+    "name": "ScenarioForge.Demo",
+    "rootNamespace": "ScenarioForge.Demo",
+    "references": [
+        "ScenarioForge.Runtime",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
