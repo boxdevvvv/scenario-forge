@@ -13,3 +13,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Blackboard` (bool, int, float, string), `SignalBus` and scene targets (`ScenarioTarget`, `SceneTargetResolver`).
 - Built-in steps: Wait, Instruction, Wait For Signal, Checklist, Reach Target, Set Blackboard Value and Blackboard Condition, each with its own validation.
 - Scene components: `ScenarioRunnerBehaviour`, `ScenarioTarget` and `ScenarioSignalEmitter`.
+- Scenario Forge window (`Window/Scenario Forge`, double-click on an asset, or the Inspector button): reorderable step list with search, context menu and shortcuts, a searchable Add Step menu, a details panel and Undo support for every action.
+- Custom Inspector for `ScenarioDefinition` and a UI Toolkit drawer for `BlackboardValue`.

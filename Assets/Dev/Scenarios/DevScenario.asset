@@ -1,0 +1,117 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c238282166d44f5c9ac3292ba852fbc, type: 3}
+  m_Name: DevScenario
+  m_EditorClassIdentifier: ScenarioForge.Runtime::ScenarioForge.ScenarioDefinition
+  title: Dev scenario
+  description: 
+  steps:
+  - rid: 8825433670872465620
+  - rid: 8825433670872465621
+  - rid: 8825433670872465622
+  - rid: 8825433670872465623
+  - rid: 8825433670872465624
+  - rid: 8825433670872465625
+  - rid: 8825433670872465626
+  references:
+    version: 2
+    RefIds:
+    - rid: 8825433670872465620
+      type: {class: InstructionStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: f39118f8edaf44c98e665ff919941492
+        title: Read the briefing
+        instruction: 
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        requireConfirmation: 1
+        confirmSignal: confirm
+        autoAdvanceSeconds: 0
+    - rid: 8825433670872465621
+      type: {class: WaitForSignalStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: 157457e198e447b0b6a935e2248e03db
+        title: Wait for door_opened
+        instruction: 
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        signal: 
+        requiredCount: 1
+    - rid: 8825433670872465622
+      type: {class: ChecklistStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: 6b6e0dc1e345446e8cbc6e565c8e29b8
+        title: 
+        instruction: 
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        items: []
+        ordered: 0
+    - rid: 8825433670872465623
+      type: {class: ReachTargetStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: 61a57f0fa2a64137b600f5bb78cc71ff
+        title: 
+        instruction: 
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        actorTargetId: 
+        destinationTargetId: 
+        radius: 1
+    - rid: 8825433670872465624
+      type: {class: SetBlackboardValueStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: c3977fc0c376418a86038c998e85f758
+        title: 
+        instruction: 
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        key: 
+        value:
+          type: 0
+          boolValue: 1
+          intValue: 0
+          floatValue: 0
+          stringValue: 
+    - rid: 8825433670872465625
+      type: {class: BlackboardConditionStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: 5b4842a54f394b41987eba54d340be7c
+        title: 
+        instruction: 
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        key: 
+        op: 0
+        value:
+          type: 0
+          boolValue: 1
+          intValue: 0
+          floatValue: 0
+          stringValue: 
+        failIfMissing: 0
+    - rid: 8825433670872465626
+      type: {class: WaitStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: d1dae33d425949e9b638df6465b66d26
+        title: 
+        instruction: 
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        duration: 1
