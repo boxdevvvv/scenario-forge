@@ -1,5 +1,5 @@
 {
-  "name": "com.yourname.scenarioforge",
+  "name": "com.boxdevvvv.scenarioforge",
   "version": "0.1.0",
   "displayName": "Scenario Forge",
   "description": "Author step-by-step procedures (trainings, tutorials, linear missions, safety checklists) in an editor window, and run them with a testable, event-driven runtime.",

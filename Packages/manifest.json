@@ -44,6 +44,6 @@
     "com.unity.pipeline": "0.10.0-exp.1"
   },
   "testables": [
-    "com.yourname.scenarioforge"
+    "com.boxdevvvv.scenarioforge"
   ]
 }

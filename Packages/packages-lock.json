@@ -166,8 +166,8 @@
         "com.unity.modules.physics": "1.0.0"
       }
     },
-    "com.yourname.scenarioforge": {
-      "version": "file:com.yourname.scenarioforge",
+    "com.boxdevvvv.scenarioforge": {
+      "version": "file:com.boxdevvvv.scenarioforge",
       "depth": 0,
       "source": "embedded",
       "dependencies": {

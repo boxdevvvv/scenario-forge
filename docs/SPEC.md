@@ -85,7 +85,7 @@ scenario-forge/                          ← raíz del repo = proyecto Unity
 │   └── Dev/                             ← escenas de prueba internas (no se publican)
 ├── Packages/
 │   ├── manifest.json                    ← debe incluir "testables" (ver 5.2)
-│   └── com.yourname.scenarioforge/      ← EL PAQUETE
+│   └── com.boxdevvvv.scenarioforge/      ← EL PAQUETE
 │       ├── package.json
 │       ├── README.md
 │       ├── CHANGELOG.md
@@ -118,15 +118,15 @@ scenario-forge/                          ← raíz del repo = proyecto Unity
 
 ### 5.1 Nombres
 
-- **Paquete:** `com.yourname.scenarioforge`. Reemplaza `yourname` por el usuario de GitHub del autor (pregúntale antes de crear archivos). Todo en minúsculas.
+- **Paquete:** `com.boxdevvvv.scenarioforge` (el usuario de GitHub del autor es `boxdevvvv`, confirmado el 2026-11-08). Todo en minúsculas.
 - **Namespaces:** `ScenarioForge` (runtime), `ScenarioForge.Steps` (pasos incluidos), `ScenarioForge.Editor`, `ScenarioForge.Tests`, `ScenarioForge.Samples`.
 
 ### 5.2 Problemas conocidos de esta estructura (resolverlos desde el inicio)
 
-1. **Los tests de un paquete no aparecen en el Test Runner** a menos que el paquete esté listado en `Packages/manifest.json` bajo `"testables": ["com.yourname.scenarioforge"]`.
+1. **Los tests de un paquete no aparecen en el Test Runner** a menos que el paquete esté listado en `Packages/manifest.json` bajo `"testables": ["com.boxdevvvv.scenarioforge"]`.
 2. **Unity ignora las carpetas que terminan en `~`**, así que el sample dentro de `Samples~` no se puede abrir en el proyecto de desarrollo. Solución: el sample vive en `Assets/Samples/ScenarioForge/AssemblyProcedure/` durante el desarrollo, y un menú de editor **interno** `Tools/Scenario Forge/Dev/Sync Sample To Package` lo copia a `Samples~/AssemblyProcedure/`. Ese menú va en un asmdef de desarrollo fuera del paquete (por ejemplo `Assets/Dev/Editor/`), **nunca dentro del paquete publicado**.
 3. **Instalación por URL de Git:** como el paquete no está en la raíz del repo, se instala con el parámetro `?path=`, y el `path` va **antes** del ancla de versión:
-   `https://github.com/yourname/scenario-forge.git?path=/Packages/com.yourname.scenarioforge#v0.1.0`
+   `https://github.com/boxdevvvv/scenario-forge.git?path=/Packages/com.boxdevvvv.scenarioforge#v0.1.0`
 4. **Referencia a Newtonsoft desde el asmdef:** si el asmdef del runtime no ve `Newtonsoft.Json`, activa `overrideReferences` y agrega `Newtonsoft.Json.dll` a `precompiledReferences`.
 
 ---

@@ -13,7 +13,7 @@ Scenario Forge is an open-source Unity editor tool for **step-by-step procedures
 In **Window > Package Manager**, click **+ > Install package from git URL…** and paste:
 
 ```
-https://github.com/yourname/scenario-forge.git?path=/Packages/com.yourname.scenarioforge#v0.1.0
+https://github.com/boxdevvvv/scenario-forge.git?path=/Packages/com.boxdevvvv.scenarioforge#v0.1.0
 ```
 
 The package lives in a subfolder of the repository, so the `?path=` part is required, and it goes **before** the `#` version.

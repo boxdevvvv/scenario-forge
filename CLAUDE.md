@@ -9,7 +9,7 @@ Este archivo va en la raíz del repositorio. Claude Code lo lee automáticamente
 ## Entorno
 
 - Unity **6.6 (6000.6.8f1)** (el autor cambió la versión desde 6.3 LTS el 2026-11-07). No uses APIs obsoletas ni APIs que no existan en esta versión. Si no estás seguro de que una API existe, búscala en la documentación de Unity 6.6 antes de usarla y dilo.
-- Proyecto Unity con el paquete embebido en `Packages/com.yourname.scenarioforge/`.
+- Proyecto Unity con el paquete embebido en `Packages/com.boxdevvvv.scenarioforge/`.
 - No puedes hacer clic en el editor de Unity. Cuando algo requiera el editor (crear escenas, asignar referencias en el Inspector, revisar visualmente), dale al autor instrucciones paso a paso, o escribe un script de editor que lo haga.
 
 ## Arquitectura

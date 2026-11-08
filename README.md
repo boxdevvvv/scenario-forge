@@ -1,8 +1,8 @@
 # Scenario Forge
 
-[![Tests](https://github.com/yourname/scenario-forge/actions/workflows/tests.yml/badge.svg)](https://github.com/yourname/scenario-forge/actions/workflows/tests.yml)
+[![Tests](https://github.com/boxdevvvv/scenario-forge/actions/workflows/tests.yml/badge.svg)](https://github.com/boxdevvvv/scenario-forge/actions/workflows/tests.yml)
 
-<!-- Hero GIF placeholder: record the window authoring a scenario and the Play Mode debugger, then replace this comment with ![Scenario Forge](Packages/com.yourname.scenarioforge/Documentation~/images/hero.gif) -->
+<!-- Hero GIF placeholder: record the window authoring a scenario and the Play Mode debugger, then replace this comment with ![Scenario Forge](Packages/com.boxdevvvv.scenarioforge/Documentation~/images/hero.gif) -->
 
 Scenario Forge is an open-source Unity editor tool for **step-by-step procedures**: trainings, tutorials, linear missions and safety checklists. Designers author the steps in an editor window; the game only reports facts (signals, blackboard values, positions), and a testable runtime checks that the player does things in the right order, records mistakes and reports the result.
 
@@ -15,7 +15,7 @@ Scenario Forge is an open-source Unity editor tool for **step-by-step procedures
 In **Window > Package Manager**, click **+ > Install package from git URL…** and paste:
 
 ```
-https://github.com/yourname/scenario-forge.git?path=/Packages/com.yourname.scenarioforge#v0.1.0
+https://github.com/boxdevvvv/scenario-forge.git?path=/Packages/com.boxdevvvv.scenarioforge#v0.1.0
 ```
 
 The package lives in a subfolder of the repository, so the `?path=` part is required, and it goes **before** the `#` version.
@@ -90,11 +90,11 @@ public sealed class PressLeverStep : ScenarioStep
 }
 ```
 
-The class must be public, `[Serializable]` and have a parameterless constructor; it then appears in the **Add Step** menu. See [Creating custom steps](Packages/com.yourname.scenarioforge/Documentation~/creating-custom-steps.md) for state, `OnEnter`/`OnExit` and renaming steps with `[MovedFrom]`.
+The class must be public, `[Serializable]` and have a parameterless constructor; it then appears in the **Add Step** menu. See [Creating custom steps](Packages/com.boxdevvvv.scenarioforge/Documentation~/creating-custom-steps.md) for state, `OnEnter`/`OnExit` and renaming steps with `[MovedFrom]`.
 
 ## JSON import and export
 
-The window's **Import** and **Export** buttons read and write JSON; **Copy** and **Paste** use the same format through the clipboard. At runtime, `ScenarioJson.TryImport(json, out var data, out var errors)` and `data.CreateDefinition()` load a scenario, for example from a learning platform. Only `ScenarioStep` types can be created from `$type`. See [JSON format](Packages/com.yourname.scenarioforge/Documentation~/json-format.md).
+The window's **Import** and **Export** buttons read and write JSON; **Copy** and **Paste** use the same format through the clipboard. At runtime, `ScenarioJson.TryImport(json, out var data, out var errors)` and `data.CreateDefinition()` load a scenario, for example from a learning platform. Only `ScenarioStep` types can be created from `$type`. See [JSON format](Packages/com.boxdevvvv.scenarioforge/Documentation~/json-format.md).
 
 ## Validation
 
@@ -120,7 +120,7 @@ It exits with code 1 when any scenario has errors.
 
 ## Documentation
 
-[Getting started](Packages/com.yourname.scenarioforge/Documentation~/getting-started.md) · [Custom steps](Packages/com.yourname.scenarioforge/Documentation~/creating-custom-steps.md) · [JSON format](Packages/com.yourname.scenarioforge/Documentation~/json-format.md) · [Debugging](Packages/com.yourname.scenarioforge/Documentation~/debugging.md) · [API overview](Packages/com.yourname.scenarioforge/Documentation~/api-overview.md)
+[Getting started](Packages/com.boxdevvvv.scenarioforge/Documentation~/getting-started.md) · [Custom steps](Packages/com.boxdevvvv.scenarioforge/Documentation~/creating-custom-steps.md) · [JSON format](Packages/com.boxdevvvv.scenarioforge/Documentation~/json-format.md) · [Debugging](Packages/com.boxdevvvv.scenarioforge/Documentation~/debugging.md) · [API overview](Packages/com.boxdevvvv.scenarioforge/Documentation~/api-overview.md)
 
 ## Credits and license
 

@@ -5,7 +5,7 @@
 Package Manager > **+ > Install package from git URL…**:
 
 ```
-https://github.com/yourname/scenario-forge.git?path=/Packages/com.yourname.scenarioforge#v0.1.0
+https://github.com/boxdevvvv/scenario-forge.git?path=/Packages/com.boxdevvvv.scenarioforge#v0.1.0
 ```
 
 ## 1. Create a scenario

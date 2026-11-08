@@ -11,7 +11,7 @@ namespace ScenarioForge.Dev
     static class SampleSync
     {
         internal const string Source = "Assets/Samples/ScenarioForge/AssemblyProcedure";
-        internal const string Destination = "Packages/com.yourname.scenarioforge/Samples~/AssemblyProcedure";
+        internal const string Destination = "Packages/com.boxdevvvv.scenarioforge/Samples~/AssemblyProcedure";
 
         [MenuItem("Tools/Scenario Forge/Dev/Sync Sample To Package")]
         static void SyncMenu()
