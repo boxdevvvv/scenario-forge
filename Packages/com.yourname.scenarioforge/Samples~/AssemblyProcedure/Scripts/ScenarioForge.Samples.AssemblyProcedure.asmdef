@@ -1,0 +1,17 @@
+{
+    "name": "ScenarioForge.Samples.AssemblyProcedure",
+    "rootNamespace": "ScenarioForge.Samples",
+    "references": [
+        "ScenarioForge.Runtime",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

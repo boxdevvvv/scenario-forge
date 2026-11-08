@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-namespace ScenarioForge.Json
+namespace ScenarioForge.Serialization
 {
     /// <summary>
     /// Explicit converters for Unity structs. Without them Newtonsoft follows properties such as

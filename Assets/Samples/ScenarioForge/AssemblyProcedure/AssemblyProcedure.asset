@@ -1,0 +1,132 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c238282166d44f5c9ac3292ba852fbc, type: 3}
+  m_Name: AssemblyProcedure
+  m_EditorClassIdentifier: ScenarioForge.Runtime::ScenarioForge.ScenarioDefinition
+  title: Assembly Procedure
+  description: 'Sample: pick two parts, attach them to the base and deliver the cart to the dock.'
+  steps:
+  - rid: 8825433675729469945
+  - rid: 8825433675729469946
+  - rid: 8825433675729469947
+  - rid: 8825433675729469948
+  - rid: 8825433675729469949
+  - rid: 8825433675729469950
+  - rid: 8825433675729469951
+  - rid: 8825433675729469952
+  references:
+    version: 2
+    RefIds:
+    - rid: 8825433675729469945
+      type: {class: InstructionStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: 3c23c0fd6d86467a9b664827c4fe465a
+        title: Briefing
+        instruction: 'Assemble the device: pick both parts, attach them to the base, then move the cart to the dock. Press Confirm to start.'
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        requireConfirmation: 1
+        confirmSignal: confirm
+        autoAdvanceSeconds: 0
+    - rid: 8825433675729469946
+      type: {class: ChecklistStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: edf130ad08b1472087044365e5ebd768
+        title: Pick the parts
+        instruction: Pick both parts
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        items:
+        - label: Part A
+          signal: part_a
+        - label: Part B
+          signal: part_b
+        ordered: 0
+    - rid: 8825433675729469947
+      type: {class: WaitForSignalStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: c358050acec2407db325a2e5cfc0188d
+        title: Attach the parts
+        instruction: Press Attach Part to fix both parts to the base.
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        signal: part_attached
+        requiredCount: 1
+    - rid: 8825433675729469948
+      type: {class: SetBlackboardValueStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: 3861ac30518d4739a9df835489154915
+        title: Record the assembly
+        instruction: 
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        key: assembled
+        value:
+          type: 0
+          boolValue: 1
+          intValue: 0
+          floatValue: 0
+          stringValue: 
+    - rid: 8825433675729469949
+      type: {class: BlackboardConditionStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: d3df3b9028ec4aa6b28758f32ed25182
+        title: Quality check
+        instruction: "Checking the assembly\u2026"
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        key: assembled
+        op: 0
+        value:
+          type: 0
+          boolValue: 1
+          intValue: 0
+          floatValue: 0
+          stringValue: 
+        failIfMissing: 0
+    - rid: 8825433675729469950
+      type: {class: ReachTargetStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: 66747357394d46b090ed00ea93465e07
+        title: Deliver the cart
+        instruction: Hold Move Cart until the cart reaches the green dock. You have 60 seconds.
+        timeoutSeconds: 60
+        onFailure: 0
+        maxRetries: 0
+        actorTargetId: cart
+        destinationTargetId: dock
+        radius: 0.6
+    - rid: 8825433675729469951
+      type: {class: SendSignalStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: b586885e5fa34d769b4a8439611931d8
+        title: Light the dock
+        instruction: 
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        signal: assembly_delivered
+    - rid: 8825433675729469952
+      type: {class: WaitStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: 906764c181d04f4b926fb73fc3598821
+        title: Done
+        instruction: Delivered! The device is assembled.
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        duration: 1.5

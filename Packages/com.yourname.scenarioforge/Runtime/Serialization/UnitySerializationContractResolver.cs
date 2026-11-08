@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using UnityEngine;
 
-namespace ScenarioForge.Json
+namespace ScenarioForge.Serialization
 {
     /// <summary>
     /// Serializes the same fields Unity serializes: public fields and private fields with

@@ -3,7 +3,7 @@ using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace ScenarioForge.Json
+namespace ScenarioForge.Serialization
 {
     /// <summary>
     /// Resolves <c>$type</c> names, accepting only non-abstract <see cref="ScenarioStep"/> types from assemblies
