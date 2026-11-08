@@ -9,7 +9,7 @@ namespace ScenarioForge.Steps
     /// the progress, for example <c>"Check the mirrors (2/4)"</c>.
     /// </summary>
     [Serializable]
-    [ScenarioStepMenu("Signals/Checklist", Tooltip = "Completes when every item's signal is raised, optionally in order.")]
+    [ScenarioStepMenu("Signals/Checklist", Tooltip = "Completes when every item's signal is raised, optionally in order. Out-of-order items count as mistakes.")]
     public sealed class ChecklistStep : ScenarioStep
     {
         [SerializeField] List<ChecklistItem> items = new();
@@ -110,9 +110,26 @@ namespace ScenarioForge.Steps
                 }
 
                 if (ordered)
+                {
+                    ReportOutOfOrder(signal, i);
                     return;
+                }
             }
         }
+
+        void ReportOutOfOrder(string signal, int expectedIndex)
+        {
+            for (int later = expectedIndex + 1; later < items.Count; later++)
+            {
+                if (done[later] || !string.Equals(items[later].Signal?.Trim(), signal, StringComparison.Ordinal))
+                    continue;
+
+                activeContext.ReportMistake($"\"{Label(later)}\" was done out of order. Do \"{Label(expectedIndex)}\" first.");
+                return;
+            }
+        }
+
+        string Label(int index) => string.IsNullOrWhiteSpace(items[index].Label) ? items[index].Signal : items[index].Label;
 
         string FormatProgress()
         {

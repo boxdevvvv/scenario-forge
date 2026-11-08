@@ -11,7 +11,7 @@ namespace ScenarioForge.Tests
     {
         static readonly Type[] BuiltInSteps =
         {
-            typeof(WaitStep), typeof(InstructionStep), typeof(WaitForSignalStep), typeof(ChecklistStep),
+            typeof(WaitStep), typeof(InstructionStep), typeof(WaitForSignalStep), typeof(ChecklistStep), typeof(SendSignalStep),
             typeof(ReachTargetStep), typeof(SetBlackboardValueStep), typeof(BlackboardConditionStep)
         };
 

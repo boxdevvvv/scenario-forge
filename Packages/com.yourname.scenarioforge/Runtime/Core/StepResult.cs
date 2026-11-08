@@ -24,9 +24,13 @@ namespace ScenarioForge
         /// <summary>Why the step failed or timed out; <c>null</c> when it did not fail.</summary>
         public readonly string FailureReason;
 
+        /// <summary>Mistakes reported while the step was active, across all its attempts.</summary>
+        public readonly int Mistakes;
+
         /// <summary>Creates a new <see cref="StepResult"/>.</summary>
-        public StepResult(string stepId, int index, StepOutcome outcome, float duration, int attempts, string failureReason)
+        public StepResult(string stepId, int index, StepOutcome outcome, float duration, int attempts, string failureReason, int mistakes = 0)
         {
+            Mistakes = mistakes;
             StepId = stepId;
             Index = index;
             Outcome = outcome;

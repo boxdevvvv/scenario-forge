@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -55,6 +56,18 @@ namespace ScenarioForge
         /// <summary>Invoked with the instruction text whenever it changes.</summary>
         public UnityEvent<string> OnInstructionChanged => onInstructionChanged;
 
+        /// <summary>Forwards <see cref="ScenarioRunner.StepStarted"/> for every run of this behaviour.</summary>
+        public event Action<StepInfo> StepStarted;
+
+        /// <summary>Forwards <see cref="ScenarioRunner.StepEnded"/> for every run of this behaviour.</summary>
+        public event Action<StepResult> StepEnded;
+
+        /// <summary>Forwards <see cref="ScenarioRunner.SignalRaised"/> for every run of this behaviour.</summary>
+        public event Action<string> SignalRaised;
+
+        /// <summary>Forwards <see cref="ScenarioRunner.MistakeReported"/> for every run of this behaviour.</summary>
+        public event Action<ScenarioMistake> MistakeReported;
+
         /// <summary>
         /// Creates a new context and runner and starts the scenario. Disposes any previous run first.
         /// </summary>
@@ -73,6 +86,10 @@ namespace ScenarioForge
             Runner = new ScenarioRunner(definition, context);
             Runner.StateChanged += HandleStateChanged;
             Runner.InstructionChanged += HandleInstructionChanged;
+            Runner.StepStarted += HandleStepStarted;
+            Runner.StepEnded += HandleStepEnded;
+            Runner.SignalRaised += HandleSignalRaised;
+            Runner.MistakeReported += HandleMistakeReported;
             Runner.Start();
         }
 
@@ -99,9 +116,21 @@ namespace ScenarioForge
 
             Runner.StateChanged -= HandleStateChanged;
             Runner.InstructionChanged -= HandleInstructionChanged;
+            Runner.StepStarted -= HandleStepStarted;
+            Runner.StepEnded -= HandleStepEnded;
+            Runner.SignalRaised -= HandleSignalRaised;
+            Runner.MistakeReported -= HandleMistakeReported;
             Runner.Dispose();
             Runner = null;
         }
+
+        void HandleStepStarted(StepInfo info) => StepStarted?.Invoke(info);
+
+        void HandleStepEnded(StepResult result) => StepEnded?.Invoke(result);
+
+        void HandleSignalRaised(string signal) => SignalRaised?.Invoke(signal);
+
+        void HandleMistakeReported(ScenarioMistake mistake) => MistakeReported?.Invoke(mistake);
 
         void HandleStateChanged(RunnerState state)
         {

@@ -24,6 +24,9 @@ namespace ScenarioForge
     {
         readonly ScenarioDefinition definition;
         readonly List<StepResult> results = new();
+        readonly List<ScenarioMistake> mistakes = new();
+        readonly Action<string> onSignalRaised;
+        readonly Action<string> onMistakeReportRequested;
 
         ScenarioContext context;
         ScenarioDefinition runtimeCopy;
@@ -31,6 +34,7 @@ namespace ScenarioForge
         ScenarioStep currentStep;
         string currentInstruction;
         int attempt;
+        int stepMistakes;
         bool isEnteringStep;
         bool isDisposed;
 
@@ -46,6 +50,8 @@ namespace ScenarioForge
             this.definition = definition;
             this.context = context ?? throw new ArgumentNullException(nameof(context), "Pass a ScenarioContext, for example new ScenarioContext().");
             CurrentStepIndex = -1;
+            onSignalRaised = OnSignalRaised;
+            onMistakeReportRequested = OnMistakeReportRequested;
         }
 
         /// <summary>Raised whenever <see cref="State"/> changes.</summary>
@@ -59,6 +65,15 @@ namespace ScenarioForge
 
         /// <summary>Raised with the instruction text of the active step whenever it changes.</summary>
         public event Action<string> InstructionChanged;
+
+        /// <summary>
+        /// Raised for every signal of the current run, whoever raised it (the game or a step such as
+        /// <see cref="Steps.SendSignalStep"/>). Keeps working across <see cref="Restart"/>.
+        /// </summary>
+        public event Action<string> SignalRaised;
+
+        /// <summary>Raised when a mistake is reported with <see cref="ScenarioContext.ReportMistake"/>.</summary>
+        public event Action<ScenarioMistake> MistakeReported;
 
         /// <summary>The asset this runner was created for. Never modified by the runner.</summary>
         public ScenarioDefinition Definition => definition;
@@ -81,6 +96,9 @@ namespace ScenarioForge
         /// <summary>The final result of every step that has ended, in order.</summary>
         public IReadOnlyList<StepResult> Results => results;
 
+        /// <summary>Mistakes reported during the current run, in the order they happened.</summary>
+        public IReadOnlyList<ScenarioMistake> Mistakes => mistakes;
+
         bool IsActive => State == RunnerState.Running || State == RunnerState.Paused;
 
         /// <summary>
@@ -102,6 +120,8 @@ namespace ScenarioForge
             steps = runtimeCopy.Steps;
 
             context.InstructionUpdateRequested += OnInstructionUpdateRequested;
+            context.MistakeReportRequested += onMistakeReportRequested;
+            context.Signals.Raised += onSignalRaised;
             SetState(RunnerState.Running);
 
             if (steps.Count == 0)
@@ -226,6 +246,7 @@ namespace ScenarioForge
             DetachContext();
             DestroyRuntimeCopy();
             results.Clear();
+            mistakes.Clear();
             context = new ScenarioContext(context.Targets, context.Services);
             CurrentStepIndex = -1;
             CurrentStepElapsed = 0f;
@@ -251,6 +272,7 @@ namespace ScenarioForge
         {
             CurrentStepIndex = index;
             attempt = 1;
+            stepMistakes = 0;
             EnterCurrentStep();
         }
 
@@ -334,7 +356,7 @@ namespace ScenarioForge
             if (step != null)
                 SafeExit(step, outcome);
 
-            var result = new StepResult(step?.Id, index, outcome, CurrentStepElapsed, attempt, reason);
+            var result = new StepResult(step?.Id, index, outcome, CurrentStepElapsed, attempt, reason, stepMistakes);
             results.Add(result);
             StepEnded?.Invoke(result);
         }
@@ -396,7 +418,28 @@ namespace ScenarioForge
             StateChanged?.Invoke(newState);
         }
 
-        void DetachContext() => context.InstructionUpdateRequested -= OnInstructionUpdateRequested;
+        void DetachContext()
+        {
+            context.InstructionUpdateRequested -= OnInstructionUpdateRequested;
+            context.MistakeReportRequested -= onMistakeReportRequested;
+            context.Signals.Raised -= onSignalRaised;
+        }
+
+        void OnSignalRaised(string signal) => SignalRaised?.Invoke(signal);
+
+        void OnMistakeReportRequested(string message)
+        {
+            if (!IsActive)
+                return;
+
+            bool hasStep = CurrentStepIndex >= 0;
+            string stepId = hasStep ? steps[CurrentStepIndex]?.Id : null;
+            var mistake = new ScenarioMistake(stepId, hasStep ? CurrentStepIndex : -1, message, context.TotalElapsed);
+            if (hasStep)
+                stepMistakes++;
+            mistakes.Add(mistake);
+            MistakeReported?.Invoke(mistake);
+        }
 
         void DestroyRuntimeCopy()
         {

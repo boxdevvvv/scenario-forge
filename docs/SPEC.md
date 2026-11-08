@@ -2,6 +2,8 @@
 
 > **Nota de versión (2026-11-07):** el autor fijó Unity **6000.6.8f1** en lugar de 6.3 LTS. Las referencias a la versión se actualizaron.
 >
+> **Ampliación aprobada (2026-11-08):** el autor aprobó que la escena reaccione al escenario y que se registren los errores del jugador. Se agregaron `ScenarioContext.ReportMistake`, `ScenarioMistake`, `StepResult.Mistakes`, `ScenarioRunner.Mistakes`/`MistakeReported`/`SignalRaised`, los eventos C# de `ScenarioRunnerBehaviour`, el paso `SendSignalStep` y los componentes `ScenarioStepEvents` y `ScenarioSignalListener` (secciones 6.5, 6.6, 6.10, 8 y 13).
+>
 > **Para Claude Code:** este documento es la fuente de verdad del proyecto. Léelo completo antes de escribir código. Si algo es ambiguo o contradice lo que encuentres en la documentación de Unity, **pregunta antes de decidir**. Los nombres de código (clases, métodos, carpetas) van en inglés. Los textos de la interfaz también van en inglés.
 
 ---
@@ -225,11 +227,14 @@ public sealed class ScenarioRunner : IDisposable
     public ScenarioStep CurrentStep { get; }          // null si no hay paso activo
     public float CurrentStepElapsed { get; }
     public IReadOnlyList<StepResult> Results { get; }
+    public IReadOnlyList<ScenarioMistake> Mistakes { get; }  // errores del jugador de esta ejecución
 
     public event Action<RunnerState> StateChanged;
     public event Action<StepInfo> StepStarted;
     public event Action<StepResult> StepEnded;
     public event Action<string> InstructionChanged;   // texto de la instrucción del paso activo
+    public event Action<string> SignalRaised;         // toda señal de la ejecución actual (también tras Restart)
+    public event Action<ScenarioMistake> MistakeReported;
 
     public void Start();
     public void Tick(float deltaTime);                // no hace nada si State != Running
@@ -248,6 +253,15 @@ public readonly struct StepResult
     public readonly float Duration;
     public readonly int Attempts;
     public readonly string FailureReason;             // null si no falló
+    public readonly int Mistakes;                     // errores reportados durante el paso (sumando reintentos)
+}
+
+public readonly struct ScenarioMistake
+{
+    public readonly string StepId;                    // null si no había paso activo
+    public readonly int StepIndex;                    // -1 si no había paso activo
+    public readonly string Message;
+    public readonly float Time;                       // TotalElapsed al reportarlo
 }
 ```
 
@@ -267,7 +281,8 @@ public readonly struct StepResult
 6. `Abort()` llama `OnExit(Aborted)` en el paso activo y pasa a `Aborted`. No hace nada si el escenario ya terminó.
 7. Una excepción dentro de un paso **no debe romper el juego**: el runner la captura, la registra con `Debug.LogException`, y trata el paso como `Failed` con `FailureReason` igual al mensaje.
 8. **Orden de eventos garantizado:** `StepEnded(n)` → `StepStarted(n+1)` → `InstructionChanged`. Un test lo verifica.
-9. **Rendimiento:** en estado estable, `Tick` no debe generar basura (GC alloc = 0). Hay un test que lo mide con `GC.GetAllocatedBytesForCurrentThread()` usando un paso de prueba que no asigna memoria.
+9. **Errores del jugador:** `ScenarioContext.ReportMistake(message)` registra un error en el paso activo mientras el escenario está en `Running` o `Paused` (fuera de eso se ignora). Un error **no** hace fallar el paso; se acumula en `Mistakes` y en `StepResult.Mistakes`, y `Restart` los borra.
+10. **Rendimiento:** en estado estable, `Tick` no debe generar basura (GC alloc = 0). Hay un test que lo mide con `GC.GetAllocatedBytesForCurrentThread()` usando un paso de prueba que no asigna memoria.
 
 ### 6.6 `ScenarioContext`
 
@@ -279,6 +294,8 @@ public sealed class ScenarioContext
     public ITargetResolver Targets { get; }
     public IScenarioServices Services { get; }    // opcional; el juego lo implementa para exponer sus sistemas
     public float TotalElapsed { get; }
+    public void UpdateInstruction(string text);   // el paso activo cambia el texto mostrado
+    public void ReportMistake(string message);    // registra un error del jugador (ver regla 9)
 }
 ```
 
@@ -309,8 +326,12 @@ public sealed class ScenarioContext
    - Campos: `ScenarioDefinition definition`, `bool autoStart = true`, y `UnityEvent`s para diseñadores: `onScenarioStarted`, `onScenarioCompleted`, `onScenarioFailed`, `onInstructionChanged (string)`.
    - Crea el contexto y el runner en `Start()` (si `autoStart`), llama `Tick(Time.deltaTime)` en `Update()` y libera todo en `OnDestroy()`.
    - Expone `Runner` y `Context` como propiedades públicas, que usa el depurador.
+   - Reenvía, para todas sus ejecuciones, los eventos C# `StepStarted`, `StepEnded`, `SignalRaised` y `MistakeReported`, para que otros componentes se suscriban una sola vez.
 2. **`ScenarioSignalEmitter`**: un método público `Raise()` con un campo `signalName`, para conectarlo a botones o triggers desde el Inspector con UnityEvents. También `RaiseSignal(string)` para pasar el nombre dinámicamente. Busca el runner con un campo asignado o, si está vacío, el primero de la escena.
 3. **`ScenarioTarget`**: ver 6.9.
+4. **`ScenarioStepEvents`**: lista de `StepEventBinding` (`stepId`, `UnityEvent onStarted`, `UnityEvent onEnded`). Invoca `onStarted` cuando empieza el paso elegido (y en cada reintento) y `onEnded` cuando termina, sea cual sea el resultado. Sirve para que la escena reaccione: habilitar una interacción solo durante su paso, mostrar un resaltado, encender un fuego. En el Inspector el paso se elige de una lista con los pasos del escenario del runner (`N. Título`), no escribiendo el ID.
+5. **`ScenarioSignalListener`**: campo `signalName` y `UnityEvent onSignal`, que se invoca cada vez que se emite esa señal (por un `SendSignalStep`, un emitter o el código). Es la contraparte de `ScenarioSignalEmitter`.
+- Los tres componentes que buscan runner (emitter, step events, listener) usan el campo asignado o, si está vacío, el primero de la escena.
 
 ---
 
@@ -367,7 +388,8 @@ Todos viven en `ScenarioForge.Steps`, llevan `[ScenarioStepMenu]` y tienen tests
 | `WaitStep` | Flow/Wait | `float duration` | pasan `duration` segundos | `duration <= 0` → Warning |
 | `InstructionStep` | Flow/Instruction | `bool requireConfirmation`, `string confirmSignal = "confirm"`, `float autoAdvanceSeconds` | se emite `confirmSignal` (si `requireConfirmation`) o pasan `autoAdvanceSeconds` | instrucción vacía → Warning; ambas opciones desactivadas → Error |
 | `WaitForSignalStep` | Signals/Wait For Signal | `string signal`, `int requiredCount = 1` | `signal` se emite `requiredCount` veces después de iniciar el paso | señal vacía → Error; `requiredCount < 1` → Error |
-| `ChecklistStep` | Signals/Checklist | `List<ChecklistItem>` (cada item: `string label`, `string signal`), `bool ordered` | todas las señales se emitieron (en orden, si `ordered`) | lista vacía → Error; señales repetidas → Warning |
+| `ChecklistStep` | Signals/Checklist | `List<ChecklistItem>` (cada item: `string label`, `string signal`), `bool ordered` | todas las señales se emitieron (en orden, si `ordered`; si se emite la señal de un item posterior antes de tiempo, se reporta un error del jugador) | lista vacía → Error; item sin señal → Error; señales repetidas → Warning |
+| `SendSignalStep` | Signals/Send Signal | `string signal` | inmediatamente, después de emitir `signal` (en el primer tick) | señal vacía → Error |
 | `ReachTargetStep` | Spatial/Reach Target | `string actorTargetId`, `string destinationTargetId`, `float radius = 1` | la distancia entre el actor y el destino es ≤ `radius` | IDs vacíos → Error; `radius <= 0` → Error |
 | `SetBlackboardValueStep` | Blackboard/Set Value | `string key`, `BlackboardValue value` | inmediatamente (en el primer tick) | clave vacía → Error |
 | `BlackboardConditionStep` | Blackboard/Wait For Condition | `string key`, `CompareOperator op`, `BlackboardValue value`, `bool failIfMissing` | la condición se cumple | clave vacía → Error; operador incompatible con el tipo (por ejemplo, `>` con string) → Error |
@@ -581,6 +603,8 @@ Cuando el editor está en Play Mode, la ventana muestra una barra de depuración
 
 - Una escena mínima con `ScenarioRunnerBehaviour` ejecuta un escenario de 3 pasos de principio a fin, emitiendo señales desde un `ScenarioSignalEmitter`.
 - `ReachTargetStep` se completa al mover un objeto con `ScenarioTarget` a la zona.
+- `ScenarioStepEvents` invoca sus eventos solo para el paso elegido, también cuando el paso se salta.
+- `ScenarioSignalListener` reacciona a `SendSignalStep` y a emitters, y sigue funcionando al iniciar el escenario de nuevo.
 
 **Meta de cobertura:** 80% o más en el assembly del runtime (medir con el paquete Code Coverage si es posible; no es requisito de CI).
 

@@ -203,8 +203,9 @@ namespace ScenarioForge.Tests
 
                 serialized.FindProperty("value.type").enumValueIndex = (int)BlackboardValueType.String;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
-                yield return null;
-                yield return null;
+                // TrackPropertyValue polls on the panel scheduler, so wait for it instead of a fixed frame count.
+                for (int frame = 0; frame < 120 && Visible("stringValue").ClassListContains("sf-hidden"); frame++)
+                    yield return null;
 
                 Assert.That(Visible("stringValue").ClassListContains("sf-hidden"), Is.False);
                 Assert.That(Visible("intValue").ClassListContains("sf-hidden"), Is.True);

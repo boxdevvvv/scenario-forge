@@ -46,6 +46,17 @@ namespace ScenarioForge
         /// <param name="text">The new instruction text.</param>
         public void UpdateInstruction(string text) => InstructionUpdateRequested?.Invoke(text ?? string.Empty);
 
+        /// <summary>Raised when a step or the game reports a player mistake.</summary>
+        internal event Action<string> MistakeReportRequested;
+
+        /// <summary>
+        /// Records a player mistake against the active step, for example an action done out of order.
+        /// Mistakes do not fail the step; they are collected in <see cref="ScenarioRunner.Mistakes"/> and
+        /// counted in <see cref="StepResult.Mistakes"/> for scoring. Ignored when no scenario is running.
+        /// </summary>
+        /// <param name="message">What the player did wrong, written for the player or an instructor.</param>
+        public void ReportMistake(string message) => MistakeReportRequested?.Invoke(string.IsNullOrWhiteSpace(message) ? "Mistake" : message.Trim());
+
         sealed class EmptyTargetResolver : ITargetResolver
         {
             public bool TryGetTransform(string targetId, out UnityEngine.Transform transform)

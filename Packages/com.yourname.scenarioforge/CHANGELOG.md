@@ -19,3 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Validation panel in the window (severity filters, click to select the step), issue icons on each step row and a validation summary in the Inspector.
 - `ScenarioForge.Editor.BatchValidation.ValidateAllScenarios` for CI (`-executeMethod`) and the `Tools/Scenario Forge/Validate All Scenarios` menu.
 - `ITargetReferencingStep`, so custom steps can have their target ids checked.
+- Player mistakes: `ScenarioContext.ReportMistake`, `ScenarioRunner.Mistakes` and `MistakeReported`, and `StepResult.Mistakes`. An ordered `ChecklistStep` reports items done out of order.
+- `SendSignalStep` (Signals/Send Signal) and `ScenarioRunner.SignalRaised`, so the scenario can tell the scene to react.
+- Scene components `ScenarioStepEvents` (UnityEvents when a chosen step starts or ends, with a step picker in the Inspector) and `ScenarioSignalListener` (a UnityEvent per signal).
+- `ScenarioRunnerBehaviour` forwards `StepStarted`, `StepEnded`, `SignalRaised` and `MistakeReported` across runs.
