@@ -26,3 +26,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JSON import and export: `ScenarioJson.Export` and `ScenarioJson.TryImport` (runtime API), `ScenarioData.CreateDefinition`, a serializer that picks the same fields as Unity, converters for `Vector2`, `Vector3`, `Quaternion` and `Color`, and a binder that only accepts `ScenarioStep` types in `$type`.
 - Import (Replace or Append, one Undo group, repeated ids regenerated) and Export buttons in the window toolbar.
 - Copy and paste steps through the system clipboard (Ctrl/Cmd+C, Ctrl/Cmd+V or the context menu); pasted steps get new ids.
+- Play Mode debugger in the window: runner picker, live step states on each row (active with elapsed time, ✓ ✕ ↷ ⏱), auto-scroll to the active step, Pause/Resume, Skip Step, Restart and Abort, a live Blackboard tab and an Event Log tab (last 200 events, Clear and Copy). Refreshes every 100 ms.

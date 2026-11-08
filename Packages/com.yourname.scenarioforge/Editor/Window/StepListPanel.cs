@@ -153,6 +153,14 @@ namespace ScenarioForge.Editor
             });
         }
 
+        /// <summary>Scrolls to the row that shows <paramref name="stepIndex"/>, without changing the selection.</summary>
+        public void ScrollToStep(int stepIndex)
+        {
+            int row = IsFiltering ? filteredIndices.IndexOf(stepIndex) : stepIndex;
+            if (row >= 0 && listView.itemsSource != null && row < listView.itemsSource.Count)
+                listView.ScrollToItem(row);
+        }
+
         public void FocusList() => listView.Focus();
 
         /// <summary>Visits every bound row, for example to refresh validation icons.</summary>

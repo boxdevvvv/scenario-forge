@@ -564,6 +564,7 @@ Cuando el editor está en Play Mode, la ventana muestra una barra de depuración
 5. **Pestaña Event Log:** los últimos 200 eventos (inicio y fin de pasos, señales, cambios de estado), con marca de tiempo. Botón para limpiar y botón para copiar el log al portapapeles.
 6. **Aviso visible:** *"Editing the asset does not affect the running instance"*, porque el runner trabaja sobre una copia (sección 6.4).
 7. La actualización de la UI usa `schedule.Execute(...).Every(100)`, no cada frame. Al salir de Play Mode, la barra de depuración desaparece sin errores.
+8. *(Agregado al implementar M5.)* El log también registra las señales y los errores del jugador (`MistakeReported`). Si el runner elegido ejecuta otro escenario, las filas no muestran estados y aparece un aviso con un botón para abrir ese escenario. Sin runners en la escena, el selector lo indica y los controles quedan desactivados.
 
 ---
 
@@ -676,7 +677,7 @@ Claude Code trabaja **un hito a la vez** y se detiene al final de cada uno para 
 - [x] Tests de JSON pasan.
 
 ### M5: Depurador en Play Mode
-- [ ] Todo lo de la sección 11.
+- [x] Todo lo de la sección 11.
 
 ### M6: Sample, documentación y pulido
 - [ ] Sample completo y registrado en `package.json`; menú de sincronización de desarrollo.

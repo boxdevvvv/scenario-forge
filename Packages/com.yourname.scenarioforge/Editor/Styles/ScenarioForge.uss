@@ -342,3 +342,146 @@
     height: 26px;
     margin-top: 4px;
 }
+
+/* Play Mode debugger */
+
+.sf-debug-bar {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 2px 4px;
+    background-color: var(--unity-colors-helpbox-background);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--unity-colors-default-border);
+}
+
+.sf-debug-bar__mode {
+    -unity-font-style: bold;
+    margin-right: 6px;
+    color: var(--unity-colors-warning-text);
+}
+
+.sf-debug-bar__runner {
+    min-width: 200px;
+    max-width: 320px;
+    flex-shrink: 1;
+}
+
+.sf-debug-bar__state {
+    margin: 0 8px;
+    min-width: 160px;
+    color: var(--unity-colors-default-text);
+}
+
+.sf-debug-bar__button {
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.sf-debug-bar__warning {
+    flex-grow: 1;
+    -unity-text-align: middle-right;
+    -unity-font-style: italic;
+    color: var(--unity-colors-label-text-disabled);
+    margin-left: 8px;
+}
+
+.sf-debug-panel {
+    height: 170px;
+    flex-shrink: 0;
+    border-top-width: 1px;
+    border-top-color: var(--unity-colors-default-border);
+}
+
+.sf-debug-panel__list {
+    flex-grow: 1;
+}
+
+.sf-debug-panel__empty {
+    padding: 6px 8px;
+    color: var(--unity-colors-label-text-disabled);
+}
+
+.sf-debug-notice {
+    flex-direction: row;
+    align-items: center;
+    padding: 2px 8px;
+    background-color: var(--unity-colors-helpbox-background);
+}
+
+.sf-debug-notice > Label {
+    flex-grow: 1;
+    color: var(--unity-colors-warning-text);
+}
+
+.sf-debug-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 0 8px;
+}
+
+.sf-debug-row__key,
+.sf-debug-row__time {
+    width: 160px;
+    flex-shrink: 0;
+    color: var(--unity-colors-default-text);
+}
+
+.sf-debug-row__time {
+    width: 64px;
+    -unity-text-align: middle-right;
+    margin-right: 8px;
+}
+
+.sf-debug-row__type,
+.sf-debug-row__kind {
+    width: 80px;
+    flex-shrink: 0;
+    color: var(--unity-colors-label-text-disabled);
+}
+
+.sf-debug-row__kind {
+    width: 90px;
+}
+
+.sf-debug-row__kind--mistake {
+    color: var(--unity-colors-error-text);
+}
+
+.sf-debug-row__value,
+.sf-debug-row__message {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--unity-colors-default-text);
+}
+
+/* Run states of step rows */
+
+.sf-row--run-pending .sf-row__title,
+.sf-row--run-pending .sf-row__index {
+    color: var(--unity-colors-label-text-disabled);
+}
+
+.sf-row--run-active {
+    background-color: var(--unity-colors-highlight-background);
+}
+
+.sf-row--run-active .sf-row__title,
+.sf-row--run-active .sf-row__state {
+    -unity-font-style: bold;
+}
+
+.sf-row--run-failed .sf-row__state,
+.sf-row--run-aborted .sf-row__state {
+    color: var(--unity-colors-error-text);
+}
+
+.sf-row--run-timedout .sf-row__state {
+    color: var(--unity-colors-warning-text);
+}
+
+.sf-row--run-skipped .sf-row__state {
+    color: var(--unity-colors-label-text-disabled);
+}

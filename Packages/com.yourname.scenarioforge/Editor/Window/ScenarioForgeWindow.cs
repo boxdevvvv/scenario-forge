@@ -39,6 +39,10 @@ namespace ScenarioForge.Editor
         ValidationPanel validationPanel;
         ValidationReport lastReport;
         IVisualElementScheduledItem pendingValidation;
+        PlayModeDebugger debugger;
+        IVisualElementScheduledItem debugRefresh;
+        bool debugActive;
+        int lastScrolledActiveIndex = -1;
 
         /// <summary>The scenario being edited, or <c>null</c> for the empty state.</summary>
         public ScenarioDefinition Scenario => scenario;
@@ -58,6 +62,11 @@ namespace ScenarioForge.Editor
 
         /// <summary>The result of the last validation, or <c>null</c> when no scenario is open.</summary>
         internal ValidationReport LastReport => lastReport;
+
+        /// <summary>The Play Mode debugger; its bar and panel are visible only while <see cref="IsDebugging"/>.</summary>
+        internal PlayModeDebugger Debugger => debugger;
+
+        internal bool IsDebugging => debugActive;
 
         static string LastScenarioPrefKey => LastScenarioPrefKeyPrefix + PlayerSettings.productGUID;
 
@@ -125,6 +134,7 @@ namespace ScenarioForge.Editor
             Undo.undoRedoPerformed += OnUndoRedo;
             EditorApplication.projectChanged += OnProjectChanged;
             EditorApplication.hierarchyChanged += ScheduleValidation;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
         void OnDisable()
@@ -132,6 +142,8 @@ namespace ScenarioForge.Editor
             Undo.undoRedoPerformed -= OnUndoRedo;
             EditorApplication.projectChanged -= OnProjectChanged;
             EditorApplication.hierarchyChanged -= ScheduleValidation;
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            SetDebugMode(false);
         }
 
         void CreateGUI()
@@ -145,6 +157,12 @@ namespace ScenarioForge.Editor
 
             root.Add(BuildToolbar());
 
+            debugger = new PlayModeDebugger();
+            debugger.OpenScenarioRequested += SetScenario;
+            debugger.Bar.AddToClassList("sf-hidden");
+            debugger.Panel.AddToClassList("sf-hidden");
+            root.Add(debugger.Bar);
+
             emptyState = BuildEmptyState();
             root.Add(emptyState);
 
@@ -157,6 +175,7 @@ namespace ScenarioForge.Editor
             split.Add(listPanel);
             split.Add(detailsPanel);
             editorArea.Add(split);
+            editorArea.Add(debugger.Panel);
             validationPanel = new ValidationPanel();
             validationPanel.IssueClicked += OnIssueClicked;
             editorArea.Add(validationPanel);
@@ -180,6 +199,8 @@ namespace ScenarioForge.Editor
             serializedScenario = scenario != null ? new SerializedObject(scenario) : null;
             scenarioField.SetValueWithoutNotify(scenario);
             RebuildAll();
+            if (EditorApplication.isPlaying)
+                SetDebugMode(true);
         }
 
         VisualElement BuildToolbar()
@@ -286,8 +307,96 @@ namespace ScenarioForge.Editor
             pendingValidation = rootVisualElement.schedule.Execute(RunValidation).StartingIn(250);
         }
 
+        void OnPlayModeStateChanged(PlayModeStateChange change)
+        {
+            if (change == PlayModeStateChange.EnteredPlayMode)
+                SetDebugMode(true);
+            else if (change == PlayModeStateChange.ExitingPlayMode)
+                SetDebugMode(false);
+        }
+
+        /// <summary>
+        /// Shows or hides the Play Mode debugger. The window turns it on when Play Mode starts and off when it
+        /// ends; tests can turn it on in Edit Mode.
+        /// </summary>
+        internal void SetDebugMode(bool active)
+        {
+            if (debugger == null || active == debugActive)
+                return;
+
+            debugActive = active;
+            debugger.Bar.EnableInClassList("sf-hidden", !active);
+            debugger.Panel.EnableInClassList("sf-hidden", !active);
+            lastScrolledActiveIndex = -1;
+            if (active)
+            {
+                debugRefresh = rootVisualElement.schedule.Execute(RefreshDebugger).Every(100);
+                RefreshDebugger();
+            }
+            else
+            {
+                debugRefresh?.Pause();
+                debugRefresh = null;
+                debugger.Stop();
+                listPanel?.ForEachRow(ApplyRunState);
+            }
+        }
+
+        /// <summary>One debugger refresh: runner list, controls, tabs and row states. Runs every 100 ms.</summary>
+        internal void RefreshDebugger()
+        {
+            if (!debugActive)
+                return;
+
+            debugger.Refresh(scenario);
+            listPanel.ForEachRow(ApplyRunState);
+            int active = debugger.ActiveIndex;
+            if (active >= 0 && active != lastScrolledActiveIndex)
+                listPanel.ScrollToStep(active);
+            lastScrolledActiveIndex = active;
+        }
+
+        void ApplyRunState(StepRow row)
+        {
+            foreach (string ussClass in StepRunStates.AllUssClasses)
+                row.RemoveFromClassList(ussClass);
+
+            IReadOnlyList<StepRunState> states = debugger?.States;
+            if (!debugActive || states == null || row.StepIndex < 0 || row.StepIndex >= states.Count)
+            {
+                row.State.text = string.Empty;
+                row.State.tooltip = null;
+                return;
+            }
+
+            StepRunState state = states[row.StepIndex];
+            ScenarioRunner runner = debugger.Runner;
+            row.AddToClassList(StepRunStates.UssClass(state));
+            row.State.text = state == StepRunState.Active ? $"{runner.CurrentStepElapsed:0.0}s" : StepRunStates.Symbol(state);
+            row.State.tooltip = state == StepRunState.Active ? "Active" : DescribeResult(runner, row.StepIndex, state);
+        }
+
+        static string DescribeResult(ScenarioRunner runner, int index, StepRunState state)
+        {
+            if (runner == null || state == StepRunState.Pending)
+                return "Pending";
+
+            for (int i = runner.Results.Count - 1; i >= 0; i--)
+            {
+                StepResult result = runner.Results[i];
+                if (result.Index != index)
+                    continue;
+
+                string text = $"{result.Outcome} after {result.Duration:0.0}s · {result.Attempts} {(result.Attempts == 1 ? "attempt" : "attempts")} · {result.Mistakes} {(result.Mistakes == 1 ? "mistake" : "mistakes")}";
+                return string.IsNullOrEmpty(result.FailureReason) ? text : text + "\n" + result.FailureReason;
+            }
+
+            return state.ToString();
+        }
+
         void DecorateRow(StepRow row)
         {
+            ApplyRunState(row);
             row.Issues.Clear();
             ValidationSeverity? worst = lastReport?.GetWorstSeverity(row.StepIndex);
             if (!worst.HasValue)
