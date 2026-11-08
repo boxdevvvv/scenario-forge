@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -19,6 +20,8 @@ namespace ScenarioForge.Editor
         public const string ResetStepUndo = "Reset Step";
         public const string PasteStepUndo = "Paste Step";
         public const string RemoveMissingUndo = "Remove Missing Step";
+        public const string ImportReplaceUndo = "Import Scenario (Replace)";
+        public const string ImportAppendUndo = "Import Scenario (Append)";
 
         /// <summary>The serialized steps array.</summary>
         public static SerializedProperty GetSteps(SerializedObject scenario) => scenario.FindProperty(ScenarioDefinition.StepsPropertyName);
@@ -167,6 +170,67 @@ namespace ScenarioForge.Editor
         }
 
         /// <summary>Renames the current Undo group, for changes applied by Unity itself (drag reordering).</summary>
+        /// <summary>
+        /// Inserts <paramref name="newSteps"/> at <paramref name="index"/> as one Undo group. Steps whose id is
+        /// empty or already used (in the scenario or earlier in <paramref name="newSteps"/>) get a new id;
+        /// with <paramref name="alwaysNewIds"/> every step gets one (used by Paste).
+        /// </summary>
+        /// <returns>How many ids were regenerated.</returns>
+        public static int InsertSteps(SerializedObject scenario, IReadOnlyList<ScenarioStep> newSteps, int index, bool alwaysNewIds, string undoName)
+        {
+            BeginUndo(undoName);
+            scenario.Update();
+            SerializedProperty steps = GetSteps(scenario);
+            int regenerated = InsertInto(steps, newSteps, Mathf.Clamp(index, 0, steps.arraySize), alwaysNewIds);
+            Apply(scenario, undoName);
+            return regenerated;
+        }
+
+        /// <summary>
+        /// Replaces the title, description and every step with imported content, as one Undo group.
+        /// Empty or repeated ids get a new id.
+        /// </summary>
+        /// <returns>How many ids were regenerated.</returns>
+        public static int ReplaceContent(SerializedObject scenario, string title, string description, IReadOnlyList<ScenarioStep> newSteps)
+        {
+            BeginUndo(ImportReplaceUndo);
+            scenario.Update();
+            scenario.FindProperty("title").stringValue = title ?? string.Empty;
+            scenario.FindProperty("description").stringValue = description ?? string.Empty;
+            SerializedProperty steps = GetSteps(scenario);
+            steps.ClearArray();
+            int regenerated = InsertInto(steps, newSteps, 0, false);
+            Apply(scenario, ImportReplaceUndo);
+            return regenerated;
+        }
+
+        static int InsertInto(SerializedProperty steps, IReadOnlyList<ScenarioStep> newSteps, int index, bool alwaysNewIds)
+        {
+            var usedIds = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < steps.arraySize; i++)
+            {
+                if (steps.GetArrayElementAtIndex(i).managedReferenceValue is ScenarioStep existing && !string.IsNullOrEmpty(existing.Id))
+                    usedIds.Add(existing.Id);
+            }
+
+            int regenerated = 0;
+            for (int i = 0; i < newSteps.Count; i++)
+            {
+                ScenarioStep step = newSteps[i];
+                if (alwaysNewIds || string.IsNullOrEmpty(step.Id) || usedIds.Contains(step.Id))
+                {
+                    step.AssignNewId();
+                    regenerated++;
+                }
+
+                usedIds.Add(step.Id);
+                steps.InsertArrayElementAtIndex(index + i);
+                steps.GetArrayElementAtIndex(index + i).managedReferenceValue = step;
+            }
+
+            return regenerated;
+        }
+
         public static void NameCurrentUndoGroup(string undoName) => Undo.SetCurrentGroupName(undoName);
 
         /// <summary>A deep copy of <paramref name="step"/> made with the editor serializer.</summary>

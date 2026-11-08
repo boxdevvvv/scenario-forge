@@ -1,0 +1,136 @@
+{
+  "formatVersion": 1,
+  "scenario": {
+    "title": "Fire Safety Drill",
+    "description": "Demo: walk to the extinguisher, pick it up, prepare it and put out the fire.",
+    "steps": [
+      {
+        "$type": "ScenarioForge.Steps.InstructionStep, ScenarioForge.Runtime",
+        "id": "51d8adb2f0284799b64320ea6935cb77",
+        "title": "Briefing",
+        "instruction": "Fire safety drill. When you press Enter (or Continue), the alarm goes off. Follow the instructions in order.",
+        "timeoutSeconds": 0.0,
+        "onFailure": "FailScenario",
+        "maxRetries": 0,
+        "requireConfirmation": true,
+        "confirmSignal": "confirm",
+        "autoAdvanceSeconds": 0.0
+      },
+      {
+        "$type": "ScenarioForge.Steps.SendSignalStep, ScenarioForge.Runtime",
+        "id": "887940f8f368400ea6f2a4801b02391a",
+        "title": "Sound the alarm",
+        "instruction": "",
+        "timeoutSeconds": 0.0,
+        "onFailure": "FailScenario",
+        "maxRetries": 0,
+        "signal": "fire_started"
+      },
+      {
+        "$type": "ScenarioForge.Steps.ReachTargetStep, ScenarioForge.Runtime",
+        "id": "497c30178cc344749c57909c91634019",
+        "title": "Walk to the extinguisher",
+        "instruction": "Fire! Walk to the red extinguisher (highlighted in yellow) with WASD. You have 30 seconds.",
+        "timeoutSeconds": 30.0,
+        "onFailure": "Retry",
+        "maxRetries": 2,
+        "actorTargetId": "player",
+        "destinationTargetId": "extinguisher",
+        "radius": 1.5
+      },
+      {
+        "$type": "ScenarioForge.Steps.WaitForSignalStep, ScenarioForge.Runtime",
+        "id": "e30bc55748fc48dbb7e2d1d4dcae6e03",
+        "title": "Pick up the extinguisher",
+        "instruction": "Press E to pick up the extinguisher.",
+        "timeoutSeconds": 0.0,
+        "onFailure": "FailScenario",
+        "maxRetries": 0,
+        "signal": "extinguisher_picked",
+        "requiredCount": 1
+      },
+      {
+        "$type": "ScenarioForge.Steps.ReachTargetStep, ScenarioForge.Runtime",
+        "id": "3d6419c41cd14495b1797878a1c5d51a",
+        "title": "Approach the fire",
+        "instruction": "Carry the extinguisher into the yellow area around the fire.",
+        "timeoutSeconds": 0.0,
+        "onFailure": "FailScenario",
+        "maxRetries": 0,
+        "actorTargetId": "player",
+        "destinationTargetId": "fire",
+        "radius": 3.0
+      },
+      {
+        "$type": "ScenarioForge.Steps.ChecklistStep, ScenarioForge.Runtime",
+        "id": "c059f653163a4f1cbada7d1f62d7b343",
+        "title": "Prepare the extinguisher",
+        "instruction": "Prepare the extinguisher in order: 1 pull the pin, 2 aim, 3 squeeze",
+        "timeoutSeconds": 0.0,
+        "onFailure": "FailScenario",
+        "maxRetries": 0,
+        "items": [
+          {
+            "label": "Pull the pin",
+            "signal": "pull_pin"
+          },
+          {
+            "label": "Aim at the base of the fire",
+            "signal": "aim"
+          },
+          {
+            "label": "Squeeze the handle",
+            "signal": "squeeze"
+          }
+        ],
+        "ordered": true
+      },
+      {
+        "$type": "ScenarioForge.Steps.SetBlackboardValueStep, ScenarioForge.Runtime",
+        "id": "84d46699c0a54e4fab01cef08df4548b",
+        "title": "Mark extinguisher ready",
+        "instruction": "",
+        "timeoutSeconds": 0.0,
+        "onFailure": "FailScenario",
+        "maxRetries": 0,
+        "key": "extinguisher_ready",
+        "value": {
+          "type": "Bool",
+          "boolValue": true,
+          "intValue": 0,
+          "floatValue": 0.0,
+          "stringValue": ""
+        }
+      },
+      {
+        "$type": "ScenarioForge.Steps.BlackboardConditionStep, ScenarioForge.Runtime",
+        "id": "93373f8cc7d44ba3ac85fdc5f674fcb7",
+        "title": "Put out the fire",
+        "instruction": "Hold Space to spray the fire until it is out.",
+        "timeoutSeconds": 40.0,
+        "onFailure": "FailScenario",
+        "maxRetries": 0,
+        "key": "fire_out",
+        "op": "Equal",
+        "value": {
+          "type": "Bool",
+          "boolValue": true,
+          "intValue": 0,
+          "floatValue": 0.0,
+          "stringValue": ""
+        },
+        "failIfMissing": false
+      },
+      {
+        "$type": "ScenarioForge.Steps.WaitStep, ScenarioForge.Runtime",
+        "id": "7515e8cf7e5c4ac083a1cdf92025f492",
+        "title": "Debrief",
+        "instruction": "Well done! The fire is out. Preparing your report…",
+        "timeoutSeconds": 0.0,
+        "onFailure": "FailScenario",
+        "maxRetries": 0,
+        "duration": 2.0
+      }
+    ]
+  }
+}

@@ -23,3 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SendSignalStep` (Signals/Send Signal) and `ScenarioRunner.SignalRaised`, so the scenario can tell the scene to react.
 - Scene components `ScenarioStepEvents` (UnityEvents when a chosen step starts or ends, with a step picker in the Inspector) and `ScenarioSignalListener` (a UnityEvent per signal).
 - `ScenarioRunnerBehaviour` forwards `StepStarted`, `StepEnded`, `SignalRaised` and `MistakeReported` across runs.
+- JSON import and export: `ScenarioJson.Export` and `ScenarioJson.TryImport` (runtime API), `ScenarioData.CreateDefinition`, a serializer that picks the same fields as Unity, converters for `Vector2`, `Vector3`, `Quaternion` and `Color`, and a binder that only accepts `ScenarioStep` types in `$type`.
+- Import (Replace or Append, one Undo group, repeated ids regenerated) and Export buttons in the window toolbar.
+- Copy and paste steps through the system clipboard (Ctrl/Cmd+C, Ctrl/Cmd+V or the context menu); pasted steps get new ids.

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -26,6 +27,8 @@ namespace ScenarioForge.Editor
         SerializedObject serializedScenario;
         ObjectField scenarioField;
         ToolbarButton addStepButton;
+        ToolbarButton importButton;
+        ToolbarButton exportButton;
         ToolbarSearchField searchField;
         VisualElement emptyState;
         VisualElement editorArea;
@@ -196,6 +199,14 @@ namespace ScenarioForge.Editor
             validateButton.name = "validateButton";
             toolbar.Add(validateButton);
 
+            importButton = new ToolbarButton(ImportFromFile) { text = "Import", tooltip = "Import steps from a JSON file (replace or append)." };
+            importButton.name = "importButton";
+            toolbar.Add(importButton);
+
+            exportButton = new ToolbarButton(ExportToFile) { text = "Export", tooltip = "Export this scenario to a JSON file." };
+            exportButton.name = "exportButton";
+            toolbar.Add(exportButton);
+
             var spacer = new ToolbarSpacer();
             spacer.AddToClassList("sf-toolbar__spacer");
             toolbar.Add(spacer);
@@ -234,6 +245,8 @@ namespace ScenarioForge.Editor
             emptyState.EnableInClassList("sf-hidden", hasScenario);
             editorArea.EnableInClassList("sf-hidden", !hasScenario);
             addStepButton.SetEnabled(hasScenario);
+            importButton.SetEnabled(hasScenario);
+            exportButton.SetEnabled(hasScenario);
             searchField.SetEnabled(hasScenario);
 
             TrackChanges();
@@ -386,8 +399,10 @@ namespace ScenarioForge.Editor
                     MoveSelected(1);
                     break;
                 case StepListCommand.Copy:
+                    CopySelected();
+                    break;
                 case StepListCommand.Paste:
-                    ShowStatus("Copy and paste arrive with JSON support (milestone M4).");
+                    PasteAfterSelected();
                     break;
             }
         }
@@ -470,7 +485,169 @@ namespace ScenarioForge.Editor
             }
 
             AfterStructureChange(copy);
-            ShowStatus($"Duplicated step {copy}.");
+            ShowStatus($"Duplicated step {selectedIndex + 1} as step {copy + 1}.");
+        }
+
+        /// <summary>Copies the selected step to the system clipboard as Scenario Forge JSON.</summary>
+        internal bool CopySelected()
+        {
+            if (serializedScenario == null || selectedIndex < 0)
+                return false;
+
+            serializedScenario.Update();
+            ScenarioStep step = ScenarioEditOperations.GetStep(serializedScenario, selectedIndex);
+            if (step == null)
+            {
+                ShowStatus("A step with a missing type cannot be copied.", true);
+                return false;
+            }
+
+            EditorGUIUtility.systemCopyBuffer = ScenarioJson.ExportSteps(string.Empty, string.Empty, new[] { step });
+            ShowStatus($"Copied step {selectedIndex + 1}.");
+            return true;
+        }
+
+        /// <summary>
+        /// Pastes the steps on the system clipboard after the selected step (or at the end), with new ids.
+        /// Invalid clipboard content shows an error in the status bar.
+        /// </summary>
+        internal bool PasteAfterSelected()
+        {
+            if (serializedScenario == null)
+                return false;
+
+            if (!ScenarioJson.TryImport(EditorGUIUtility.systemCopyBuffer, out ScenarioData data, out var errors))
+            {
+                ShowStatus("Nothing to paste: the clipboard does not hold Scenario Forge steps. " + errors[0], true);
+                return false;
+            }
+
+            if (data.Steps.Count == 0)
+            {
+                ShowStatus("Nothing to paste: the clipboard holds a scenario with no steps.", true);
+                return false;
+            }
+
+            int count = ScenarioEditOperations.GetStepCount(serializedScenario);
+            int index = selectedIndex >= 0 ? Mathf.Min(selectedIndex + 1, count) : count;
+            ScenarioEditOperations.InsertSteps(serializedScenario, data.Steps, index, alwaysNewIds: true, ScenarioEditOperations.PasteStepUndo);
+            AfterStructureChange(index);
+            ShowStatus(data.Steps.Count == 1 ? $"Pasted step {index + 1}." : $"Pasted {data.Steps.Count} steps at {index + 1}.");
+            return true;
+        }
+
+        /// <summary>How imported steps are merged into the scenario.</summary>
+        internal enum ImportMode
+        {
+            Replace,
+            Append
+        }
+
+        /// <summary>
+        /// Imports JSON into the scenario as one Undo group. Repeated ids get new ids and the status bar says how many.
+        /// </summary>
+        internal bool ImportJson(string json, ImportMode mode, string sourceName = "the JSON")
+        {
+            if (serializedScenario == null)
+                return false;
+
+            if (!ScenarioJson.TryImport(json, out ScenarioData data, out var errors))
+            {
+                ShowStatus($"Import failed: {errors[0]}", true);
+                return false;
+            }
+
+            int regenerated;
+            int selectAfter;
+            if (mode == ImportMode.Replace)
+            {
+                regenerated = ScenarioEditOperations.ReplaceContent(serializedScenario, data.Title, data.Description, data.Steps);
+                selectAfter = data.Steps.Count > 0 ? 0 : -1;
+            }
+            else
+            {
+                int count = ScenarioEditOperations.GetStepCount(serializedScenario);
+                regenerated = ScenarioEditOperations.InsertSteps(serializedScenario, data.Steps, count, alwaysNewIds: false, ScenarioEditOperations.ImportAppendUndo);
+                selectAfter = data.Steps.Count > 0 ? count : selectedIndex;
+            }
+
+            AfterStructureChange(selectAfter);
+            string idNote = regenerated == 0 ? string.Empty : $" {regenerated} step {(regenerated == 1 ? "id was" : "ids were")} already in use and got a new id.";
+            ShowStatus($"Imported {data.Steps.Count} {(data.Steps.Count == 1 ? "step" : "steps")} from {sourceName} ({(mode == ImportMode.Replace ? "replaced" : "appended")}).{idNote}");
+            return true;
+        }
+
+        void ImportFromFile()
+        {
+            if (serializedScenario == null)
+                return;
+
+            string path = EditorUtility.OpenFilePanel("Import Scenario", string.Empty, "json");
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            string json;
+            try
+            {
+                json = File.ReadAllText(path);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                ShowStatus($"Could not read {Path.GetFileName(path)}: {exception.Message}", true);
+                return;
+            }
+
+            if (!ScenarioJson.TryImport(json, out ScenarioData data, out var errors))
+            {
+                string shown = string.Join("\n", errors.Count > 5 ? new List<string>(errors).GetRange(0, 5) : errors);
+                EditorUtility.DisplayDialog("Import Failed", $"{Path.GetFileName(path)} could not be imported:\n\n{shown}", "OK");
+                ShowStatus($"Import failed: {errors[0]}", true);
+                return;
+            }
+
+            var mode = ImportMode.Replace;
+            if (ScenarioEditOperations.GetStepCount(serializedScenario) > 0)
+            {
+                int choice = EditorUtility.DisplayDialogComplex("Import Scenario",
+                    $"Import {data.Steps.Count} steps from {Path.GetFileName(path)}.\n\nReplace the current title, description and steps, or append the steps at the end?",
+                    "Replace", "Cancel", "Append");
+                if (choice == 1)
+                    return;
+                mode = choice == 0 ? ImportMode.Replace : ImportMode.Append;
+            }
+
+            ImportJson(json, mode, Path.GetFileName(path));
+        }
+
+        void ExportToFile()
+        {
+            if (scenario == null)
+                return;
+
+            string json;
+            try
+            {
+                json = ScenarioJson.Export(scenario);
+            }
+            catch (InvalidOperationException exception)
+            {
+                ShowStatus(exception.Message, true);
+                return;
+            }
+
+            string path = EditorUtility.SaveFilePanel("Export Scenario", string.Empty, scenario.name, "json");
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            try
+            {
+                File.WriteAllText(path, json);
+                ShowStatus($"Exported {scenario.Steps.Count} steps to {Path.GetFileName(path)}.");
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                ShowStatus($"Could not write {Path.GetFileName(path)}: {exception.Message}", true);
+            }
         }
 
         void MoveSelected(int offset)

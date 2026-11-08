@@ -542,7 +542,8 @@ public sealed class PressLeverStep : ScenarioStep
 
 1. API en el runtime (para poder cargar escenarios en runtime, por ejemplo desde un LMS):
    `ScenarioJson.Export(ScenarioDefinition) → string` y `ScenarioJson.TryImport(string json, out ScenarioData data, out IReadOnlyList<string> errors) → bool`.
-2. **Serializa lo mismo que serializa Unity:** campos públicos y campos privados con `[SerializeField]`, e ignora `[NonSerialized]`. Implementa un `ContractResolver` propio para lograrlo. Los enums se escriben como texto.
+   `ScenarioData` expone `Title`, `Description`, `Steps` y `CreateDefinition()`, que arma un `ScenarioDefinition` en memoria listo para ejecutar. `ScenarioJson.FormatVersion` es la versión actual (1).
+2. **Serializa lo mismo que serializa Unity:** campos públicos y campos privados con `[SerializeField]`, e ignora `[NonSerialized]`, los campos `readonly` y las referencias a `UnityEngine.Object` (un asset no puede viajar en JSON). Implementa un `ContractResolver` propio para lograrlo. Los enums se escriben como texto.
 3. **Seguridad (obligatorio):** `TypeNameHandling.Auto` con un `ISerializationBinder` propio que **solo** acepte tipos que hereden de `ScenarioStep`. Cualquier otro tipo en `$type` genera un error de importación. Así un JSON malicioso no puede instanciar tipos arbitrarios. Hay un test que lo verifica.
 4. **Tipos de Unity:** si un paso usa `Vector3`, `Color` u otros structs de Unity, agrega convertidores explícitos. Sin ellos, Newtonsoft entra en bucles con propiedades como `Vector3.normalized`. La v0.1 incluye convertidores para `Vector2`, `Vector3`, `Quaternion` y `Color`.
 5. `formatVersion` desconocido o mayor al soportado → error claro, sin importar nada.
@@ -669,10 +670,10 @@ Claude Code trabaja **un hito a la vez** y se detiene al final de cada uno para 
 - [ ] Validación por línea de comandos y menú *Validate All Scenarios*.
 
 ### M4: JSON y portapapeles
-- [ ] Exportar e importar (*Replace* y *Append*) desde la ventana.
-- [ ] Copiar y pegar pasos.
-- [ ] Binder de seguridad y convertidores.
-- [ ] Tests de JSON pasan.
+- [x] Exportar e importar (*Replace* y *Append*) desde la ventana.
+- [x] Copiar y pegar pasos.
+- [x] Binder de seguridad y convertidores.
+- [x] Tests de JSON pasan.
 
 ### M5: Depurador en Play Mode
 - [ ] Todo lo de la sección 11.
