@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using UnityEngine.Assemblies;
 
 namespace ScenarioForge.Serialization
 {
@@ -76,7 +77,7 @@ namespace ScenarioForge.Serialization
             if (string.IsNullOrWhiteSpace(typeName))
                 return null;
 
-            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (Assembly assembly in CurrentAssemblies.GetLoadedAssemblies())
             {
                 if (!string.IsNullOrEmpty(assemblyName) && assembly.GetName().Name != assemblyName)
                     continue;

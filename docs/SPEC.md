@@ -412,7 +412,7 @@ public sealed class PressLeverStep : ScenarioStep
     [SerializeField] string leverTargetId;
     [SerializeField] float targetAngle = 45f;
 
-    protected internal override StepStatus OnTick(ScenarioContext context, float deltaTime)
+    protected override StepStatus OnTick(ScenarioContext context, float deltaTime)   // desde otro assembly es "protected override"
     {
         // lógica del juego…
         return StepStatus.Running;
@@ -680,8 +680,8 @@ Claude Code trabaja **un hito a la vez** y se detiene al final de cada uno para 
 - [x] Todo lo de la sección 11.
 
 ### M6: Sample, documentación y pulido
-- [ ] Sample completo y registrado en `package.json`; menú de sincronización de desarrollo.
-- [ ] README, `Documentation~` y XML docs completos.
+- [x] Sample completo y registrado en `package.json`; menú de sincronización de desarrollo.
+- [x] README, `Documentation~` y XML docs completos.
 - [ ] Revisión visual con tema claro y oscuro.
 - [ ] Cero errores y cero advertencias en consola al abrir el proyecto, entrar a Play Mode y salir.
 - [ ] CI en verde. Tag `v0.1.0` y release en GitHub.
