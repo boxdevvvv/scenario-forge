@@ -114,6 +114,8 @@ namespace ScenarioForge
             if (Runner == null)
                 return;
 
+            // Abort while still subscribed, so step listeners get OnEnded (Aborted) for the active step.
+            Runner.Abort();
             Runner.StateChanged -= HandleStateChanged;
             Runner.InstructionChanged -= HandleInstructionChanged;
             Runner.StepStarted -= HandleStepStarted;

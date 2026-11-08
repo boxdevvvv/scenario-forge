@@ -15,45 +15,56 @@ MonoBehaviour:
   title: Fire Safety Drill
   description: 'Demo: walk to the extinguisher, pick it up, prepare it and put out the fire.'
   steps:
-  - rid: 8825433672651112514
-  - rid: 8825433672651112515
-  - rid: 8825433672651112516
-  - rid: 8825433672651112517
-  - rid: 8825433672651112518
-  - rid: 8825433672651112519
-  - rid: 8825433672651112520
-  - rid: 8825433672651112521
+  - rid: 8825433672651112820
+  - rid: 8825433672651112821
+  - rid: 8825433672651112822
+  - rid: 8825433672651112823
+  - rid: 8825433672651112824
+  - rid: 8825433672651112825
+  - rid: 8825433672651112826
+  - rid: 8825433672651112827
+  - rid: 8825433672651112828
   references:
     version: 2
     RefIds:
-    - rid: 8825433672651112514
+    - rid: 8825433672651112820
       type: {class: InstructionStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
-        id: 7e7dda54828f4a7c817f5cf10e5944ec
+        id: 51d8adb2f0284799b64320ea6935cb77
         title: Briefing
-        instruction: Fire safety drill. There is a fire in the room. Press Enter (or Continue) to start.
+        instruction: Fire safety drill. When you press Enter (or Continue), the alarm goes off. Follow the instructions in order.
         timeoutSeconds: 0
         onFailure: 0
         maxRetries: 0
         requireConfirmation: 1
         confirmSignal: confirm
         autoAdvanceSeconds: 0
-    - rid: 8825433672651112515
+    - rid: 8825433672651112821
+      type: {class: SendSignalStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
+      data:
+        id: 887940f8f368400ea6f2a4801b02391a
+        title: Sound the alarm
+        instruction: 
+        timeoutSeconds: 0
+        onFailure: 0
+        maxRetries: 0
+        signal: fire_started
+    - rid: 8825433672651112822
       type: {class: ReachTargetStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
-        id: 2193804323f0428c8dc871105397380b
+        id: 497c30178cc344749c57909c91634019
         title: Walk to the extinguisher
-        instruction: Walk to the red extinguisher with WASD. You have 30 seconds.
+        instruction: Fire! Walk to the red extinguisher (highlighted in yellow) with WASD. You have 30 seconds.
         timeoutSeconds: 30
         onFailure: 2
         maxRetries: 2
         actorTargetId: player
         destinationTargetId: extinguisher
         radius: 1.5
-    - rid: 8825433672651112516
+    - rid: 8825433672651112823
       type: {class: WaitForSignalStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
-        id: 9b17d10c4a45467eb3b7accb5d1dd7b8
+        id: e30bc55748fc48dbb7e2d1d4dcae6e03
         title: Pick up the extinguisher
         instruction: Press E to pick up the extinguisher.
         timeoutSeconds: 0
@@ -61,24 +72,24 @@ MonoBehaviour:
         maxRetries: 0
         signal: extinguisher_picked
         requiredCount: 1
-    - rid: 8825433672651112517
+    - rid: 8825433672651112824
       type: {class: ReachTargetStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
-        id: 63f6b11824da4b49907687ddf1f85380
+        id: 3d6419c41cd14495b1797878a1c5d51a
         title: Approach the fire
-        instruction: Carry the extinguisher close to the fire.
+        instruction: Carry the extinguisher into the yellow area around the fire.
         timeoutSeconds: 0
         onFailure: 0
         maxRetries: 0
         actorTargetId: player
         destinationTargetId: fire
         radius: 3
-    - rid: 8825433672651112518
+    - rid: 8825433672651112825
       type: {class: ChecklistStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
-        id: 1aa39806aafa49cd8fa8d4622de07c46
+        id: c059f653163a4f1cbada7d1f62d7b343
         title: Prepare the extinguisher
-        instruction: Prepare it in order with keys 1, 2, 3
+        instruction: 'Prepare the extinguisher in order: 1 pull the pin, 2 aim, 3 squeeze'
         timeoutSeconds: 0
         onFailure: 0
         maxRetries: 0
@@ -90,10 +101,10 @@ MonoBehaviour:
         - label: Squeeze the handle
           signal: squeeze
         ordered: 1
-    - rid: 8825433672651112519
+    - rid: 8825433672651112826
       type: {class: SetBlackboardValueStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
-        id: 5bab3fe773c043ddabaa637334278176
+        id: 84d46699c0a54e4fab01cef08df4548b
         title: Mark extinguisher ready
         instruction: 
         timeoutSeconds: 0
@@ -106,12 +117,12 @@ MonoBehaviour:
           intValue: 0
           floatValue: 0
           stringValue: 
-    - rid: 8825433672651112520
+    - rid: 8825433672651112827
       type: {class: BlackboardConditionStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
-        id: 12e6fc9904174d7b8d0c32097035e107
+        id: 93373f8cc7d44ba3ac85fdc5f674fcb7
         title: Put out the fire
-        instruction: Hold Space next to the fire until it is out.
+        instruction: Hold Space to spray the fire until it is out.
         timeoutSeconds: 40
         onFailure: 0
         maxRetries: 0
@@ -124,12 +135,12 @@ MonoBehaviour:
           floatValue: 0
           stringValue: 
         failIfMissing: 0
-    - rid: 8825433672651112521
+    - rid: 8825433672651112828
       type: {class: WaitStep, ns: ScenarioForge.Steps, asm: ScenarioForge.Runtime}
       data:
-        id: d517baf3f15a4c9bb579b17564bcfbfa
+        id: 7515e8cf7e5c4ac083a1cdf92025f492
         title: Debrief
-        instruction: Well done! The fire is out.
+        instruction: "Well done! The fire is out. Preparing your report\u2026"
         timeoutSeconds: 0
         onFailure: 0
         maxRetries: 0

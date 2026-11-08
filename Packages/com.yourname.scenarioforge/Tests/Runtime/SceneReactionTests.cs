@@ -107,6 +107,26 @@ namespace ScenarioForge.Tests
         }
 
         [UnityTest]
+        public IEnumerator StepEvents_InvokeEnded_WhenTheScenarioIsStartedAgain()
+        {
+            var only = new WaitForSignalStep { Signal = "never" };
+            ScenarioRunnerBehaviour runner = CreateRunner(CreateScenario(only), out GameObject runnerGo);
+            ScenarioStepEvents events = AddInactive<ScenarioStepEvents>("Step Events", out GameObject eventsGo);
+            var log = new List<string>();
+            var binding = new StepEventBinding { StepId = only.Id };
+            binding.OnStarted.AddListener(() => log.Add("started"));
+            binding.OnEnded.AddListener(() => log.Add("ended"));
+            events.Bindings.Add(binding);
+            runnerGo.SetActive(true);
+            eventsGo.SetActive(true);
+            yield return null;
+
+            runner.StartScenario();
+
+            Assert.That(log, Is.EqualTo(new[] { "started", "ended", "started" }));
+        }
+
+        [UnityTest]
         public IEnumerator SignalListener_ReactsToSendSignalStep_AndToEmitters()
         {
             ScenarioRunnerBehaviour runner = CreateRunner(

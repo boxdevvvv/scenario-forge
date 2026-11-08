@@ -7,81 +7,90 @@ using UnityEngine.InputSystem;
 namespace ScenarioForge.Demo
 {
     /// <summary>
-    /// A debug HUD for the demo scene. It shows the step list and the current instruction,
-    /// raises signals from keyboard shortcuts and offers pause, skip and restart controls.
+    /// The demo's screen: the step list, the current instruction, mistake messages and a final report.
+    /// It also turns keys into signals and offers pause, skip and restart controls.
     /// </summary>
     public sealed class DemoHud : MonoBehaviour
     {
+        const float ToastSeconds = 3f;
+
         [SerializeField] ScenarioRunnerBehaviour runner;
         [SerializeField] DemoPlayer player;
         [SerializeField] DemoPickup extinguisher;
         [SerializeField] DemoFire fire;
 
-        readonly Dictionary<int, StepResult> lastResults = new();
         readonly StringBuilder text = new();
-        ScenarioRunner observedRunner;
+        bool checklistActive;
         int currentAttempt = 1;
         string instruction = string.Empty;
+        string toast;
+        float toastUntil;
         GUIStyle panelStyle;
         GUIStyle instructionStyle;
+        GUIStyle toastStyle;
+        GUIStyle titleStyle;
 
         /// <summary>Shows a new instruction. Wired to the runner's On Instruction Changed event in the scene.</summary>
-        public void SetInstruction(string value)
+        public void SetInstruction(string value) => instruction = value ?? string.Empty;
+
+        /// <summary>Enables the 1/2/3 extinguisher keys. Wired to the checklist step's events in the scene.</summary>
+        public void SetChecklistActive(bool value) => checklistActive = value;
+
+        void OnEnable()
         {
-            instruction = value ?? string.Empty;
+            if (runner == null)
+                return;
+            runner.StepStarted += HandleStepStarted;
+            runner.MistakeReported += HandleMistake;
+        }
+
+        void OnDisable()
+        {
+            if (runner == null)
+                return;
+            runner.StepStarted -= HandleStepStarted;
+            runner.MistakeReported -= HandleMistake;
+        }
+
+        void HandleStepStarted(StepInfo info) => currentAttempt = info.Attempt;
+
+        void HandleMistake(ScenarioMistake mistake)
+        {
+            toast = mistake.Message;
+            toastUntil = Time.unscaledTime + ToastSeconds;
         }
 
         void Update()
         {
-            ObserveRunner();
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null || runner == null || runner.Runner == null)
                 return;
 
             if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame) Raise("confirm");
-            if (keyboard.digit1Key.wasPressedThisFrame) Raise("pull_pin");
-            if (keyboard.digit2Key.wasPressedThisFrame) Raise("aim");
-            if (keyboard.digit3Key.wasPressedThisFrame) Raise("squeeze");
+            if (keyboard.digit1Key.wasPressedThisFrame) Operate("pull_pin");
+            if (keyboard.digit2Key.wasPressedThisFrame) Operate("aim");
+            if (keyboard.digit3Key.wasPressedThisFrame) Operate("squeeze");
             if (keyboard.pKey.wasPressedThisFrame) TogglePause();
             if (keyboard.nKey.wasPressedThisFrame) runner.Runner.SkipCurrentStep();
             if (keyboard.rKey.wasPressedThisFrame) Restart();
         }
 
-        void ObserveRunner()
-        {
-            ScenarioRunner current = runner != null ? runner.Runner : null;
-            if (current == observedRunner)
-                return;
-
-            if (observedRunner != null)
-            {
-                observedRunner.StepStarted -= HandleStepStarted;
-                observedRunner.StepEnded -= HandleStepEnded;
-            }
-
-            observedRunner = current;
-            lastResults.Clear();
-            currentAttempt = 1;
-            if (observedRunner != null)
-            {
-                observedRunner.StepStarted += HandleStepStarted;
-                observedRunner.StepEnded += HandleStepEnded;
-            }
-        }
-
-        void OnDestroy()
-        {
-            if (observedRunner == null)
-                return;
-            observedRunner.StepStarted -= HandleStepStarted;
-            observedRunner.StepEnded -= HandleStepEnded;
-        }
-
-        void HandleStepStarted(StepInfo info) => currentAttempt = info.Attempt;
-
-        void HandleStepEnded(StepResult result) => lastResults[result.Index] = result;
-
         void Raise(string signal) => runner.Context?.Signals.Raise(signal);
+
+        /// <summary>Handles an extinguisher key: raises its signal, or reports a mistake when it makes no sense yet.</summary>
+        void Operate(string signal)
+        {
+            ScenarioContext context = runner.Context;
+            if (context == null || (fire != null && fire.IsReady))
+                return;
+
+            if (extinguisher != null && !extinguisher.IsHeld)
+                context.ReportMistake("Tried to operate the extinguisher without holding it.");
+            else if (!checklistActive)
+                context.ReportMistake("Too early: get close to the fire before preparing the extinguisher.");
+            else
+                context.Signals.Raise(signal);
+        }
 
         void TogglePause()
         {
@@ -92,11 +101,12 @@ namespace ScenarioForge.Demo
 
         void Restart()
         {
+            toast = null;
+            checklistActive = false;
             player?.ResetDemo();
             extinguisher?.ResetDemo();
             fire?.ResetDemo();
             runner.StartScenario();
-            ObserveRunner();
         }
 
         void OnGUI()
@@ -106,9 +116,11 @@ namespace ScenarioForge.Demo
 
             EnsureStyles();
             ScenarioRunner r = runner.Runner;
+            bool finished = r.State == RunnerState.Completed || r.State == RunnerState.Failed || r.State == RunnerState.Aborted;
+
             GUILayout.BeginArea(new Rect(12, 12, 380, Screen.height - 24), panelStyle);
             GUILayout.Label($"<b>{r.Definition.Title}</b>   <color=#{StateColor(r.State)}>{r.State}</color>");
-            GUILayout.Label($"Total time: {r.Context.TotalElapsed:0.0}s");
+            GUILayout.Label($"Time {r.Context.TotalElapsed:0.0}s   ·   Mistakes <color=#{(r.Mistakes.Count > 0 ? "ff6b6b" : "6fdc6f")}>{r.Mistakes.Count}</color>");
             GUILayout.Space(6);
             DrawSteps(r);
             GUILayout.Space(6);
@@ -116,20 +128,49 @@ namespace ScenarioForge.Demo
             GUILayout.Space(6);
             DrawButtons(r);
             GUILayout.FlexibleSpace();
-            GUILayout.Label("<b>Keys</b>  WASD move · E pick up · Space spray\n" +
-                            "Enter continue · 1 2 3 checklist\nP pause · N skip step · R restart");
+            GUILayout.Label("<b>Keys</b>  WASD move · E take · Space spray\n" +
+                            "Enter continue · 1 2 3 operate extinguisher\nP pause · N skip step · R restart");
             GUILayout.EndArea();
 
-            DrawInstruction(r);
+            if (finished)
+                DrawReport(r);
+            else
+                DrawInstruction(r);
+
+            if (!string.IsNullOrEmpty(toast) && Time.unscaledTime < toastUntil)
+            {
+                float width = Mathf.Min(620f, Screen.width - 420f);
+                GUI.Box(new Rect(400 + (Screen.width - 412 - width) / 2f, 16, Mathf.Max(260f, width), 64), "<b>Mistake</b>\n" + toast, toastStyle);
+            }
+        }
+
+        static bool TryGetResult(ScenarioRunner r, int index, out StepResult result)
+        {
+            for (int i = r.Results.Count - 1; i >= 0; i--)
+            {
+                if (r.Results[i].Index == index)
+                {
+                    result = r.Results[i];
+                    return true;
+                }
+            }
+
+            result = default;
+            return false;
+        }
+
+        static string TitleOf(ScenarioRunner r, int index)
+        {
+            ScenarioStep step = index >= 0 && index < r.Definition.Steps.Count ? r.Definition.Steps[index] : null;
+            return step != null ? step.Title : "(missing type)";
         }
 
         void DrawSteps(ScenarioRunner r)
         {
-            IReadOnlyList<ScenarioStep> steps = r.Definition.Steps;
-            for (int i = 0; i < steps.Count; i++)
+            for (int i = 0; i < r.Definition.Steps.Count; i++)
             {
-                ScenarioStep step = steps[i];
-                string title = step != null ? step.Title : "(missing type)";
+                ScenarioStep step = r.Definition.Steps[i];
+                string title = TitleOf(r, i);
                 bool isCurrent = i == r.CurrentStepIndex && (r.State == RunnerState.Running || r.State == RunnerState.Paused);
                 text.Clear();
                 if (isCurrent)
@@ -142,11 +183,16 @@ namespace ScenarioForge.Demo
                         text.Append("  attempt ").Append(currentAttempt);
                     text.Append("</color>");
                 }
-                else if (lastResults.TryGetValue(i, out StepResult result))
+                else if (TryGetResult(r, i, out StepResult result))
                 {
                     text.Append("<color=#").Append(OutcomeColor(result.Outcome)).Append(">[")
                         .Append(OutcomeMark(result.Outcome)).Append("] ").Append(i + 1).Append(". ").Append(title)
-                        .Append("  ").Append(result.Outcome).Append("</color>");
+                        .Append("  ").Append(result.Duration.ToString("0.0")).Append('s');
+                    if (result.Outcome != StepOutcome.Succeeded)
+                        text.Append("  ").Append(result.Outcome);
+                    text.Append("</color>");
+                    if (result.Mistakes > 0)
+                        text.Append("  <color=#ff6b6b>").Append(result.Mistakes).Append(result.Mistakes == 1 ? " mistake" : " mistakes").Append("</color>");
                 }
                 else
                 {
@@ -159,7 +205,7 @@ namespace ScenarioForge.Demo
                     for (int item = 0; item < checklist.Items.Count; item++)
                     {
                         string mark = item < checklist.CheckedCount ? "x" : " ";
-                        GUILayout.Label($"        [{mark}] {checklist.Items[item].Label}  <color=#9a9a9a>({checklist.Items[item].Signal})</color>");
+                        GUILayout.Label($"        [{mark}] {item + 1}  {checklist.Items[item].Label}");
                     }
                 }
             }
@@ -192,30 +238,86 @@ namespace ScenarioForge.Demo
 
         void DrawInstruction(ScenarioRunner r)
         {
-            string message = r.State switch
-            {
-                RunnerState.Completed => "<b>Scenario completed!</b>  Press R to run it again.",
-                RunnerState.Failed => "<b>Scenario failed.</b>  Press R to try again.",
-                RunnerState.Paused => "<b>Paused</b>  ·  " + instruction,
-                _ => instruction
-            };
+            string message = r.State == RunnerState.Paused ? "<b>Paused</b>  ·  " + instruction : instruction;
             if (fire != null && fire.IsSpraying)
                 message += $"\n<color=#7fd4ff>Spraying… {fire.Intensity * 100f:0}% fire left</color>";
-            else if (extinguisher != null && extinguisher.IsInReach)
-                message += "\n<color=#7fd4ff>Press E to pick up the extinguisher</color>";
+            else if (extinguisher != null && extinguisher.IsInReach && extinguisher.IsInteractable)
+                message += "\n<color=#7fd4ff>Press E to take the extinguisher</color>";
 
             float width = Mathf.Max(280f, Mathf.Min(720f, Screen.width - 420f));
             var rect = new Rect(400 + (Screen.width - 412 - width) / 2f, Screen.height - 130, width, 110);
             GUI.Box(rect, message, instructionStyle);
         }
 
+        void DrawReport(ScenarioRunner r)
+        {
+            float width = Mathf.Max(320f, Mathf.Min(640f, Screen.width - 430f));
+            float height = Mathf.Min(Screen.height - 40f, 230f + r.Results.Count * 22f + Mathf.Min(r.Mistakes.Count, 6) * 20f);
+            var rect = new Rect(400 + (Screen.width - 412 - width) / 2f, (Screen.height - height) / 2f, width, height);
+            GUILayout.BeginArea(rect, panelStyle);
+
+            int skipped = 0, retries = 0;
+            string failure = null;
+            foreach (StepResult result in r.Results)
+            {
+                if (result.Outcome == StepOutcome.Skipped) skipped++;
+                retries += result.Attempts - 1;
+                if (result.FailureReason != null) failure = result.FailureReason;
+            }
+
+            string grade = r.State switch
+            {
+                RunnerState.Failed => "<color=#ff6b6b>FAILED</color>",
+                RunnerState.Aborted => "<color=#ff6b6b>ABORTED</color>",
+                _ when skipped > 0 => "<color=#c0c0c0>COMPLETED WITH SKIPPED STEPS</color>",
+                _ when r.Mistakes.Count == 0 && retries == 0 => "<color=#6fdc6f>EXCELLENT</color>",
+                _ when r.Mistakes.Count <= 2 => "<color=#6fdc6f>PASSED</color>",
+                _ => "<color=#ffd34d>PASSED, NEEDS PRACTICE</color>"
+            };
+
+            GUILayout.Label($"Drill report  ·  {grade}", titleStyle);
+            GUILayout.Label($"Total time {r.Context.TotalElapsed:0.0}s   ·   Mistakes {r.Mistakes.Count}   ·   Retries {retries}   ·   Skipped {skipped}");
+            if (failure != null)
+                GUILayout.Label($"<color=#ff6b6b>{failure}</color>");
+            GUILayout.Space(8);
+
+            foreach (StepResult result in r.Results)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"{result.Index + 1}. {TitleOf(r, result.Index)}", GUILayout.Width(width * 0.46f));
+                GUILayout.Label($"<color=#{OutcomeColor(result.Outcome)}>{result.Outcome}</color>", GUILayout.Width(width * 0.18f));
+                GUILayout.Label($"{result.Duration:0.0}s", GUILayout.Width(width * 0.1f));
+                GUILayout.Label(result.Attempts > 1 ? $"x{result.Attempts}" : "", GUILayout.Width(width * 0.06f));
+                GUILayout.Label(result.Mistakes > 0 ? $"<color=#ff6b6b>{result.Mistakes} err</color>" : "");
+                GUILayout.EndHorizontal();
+            }
+
+            if (r.Mistakes.Count > 0)
+            {
+                GUILayout.Space(8);
+                GUILayout.Label("<b>Mistakes</b>");
+                for (int i = 0; i < r.Mistakes.Count && i < 6; i++)
+                {
+                    ScenarioMistake mistake = r.Mistakes[i];
+                    string where = mistake.StepIndex >= 0 ? $"step {mistake.StepIndex + 1}" : "no step";
+                    GUILayout.Label($"  {mistake.Time:0.0}s  ({where})  {mistake.Message}");
+                }
+                if (r.Mistakes.Count > 6)
+                    GUILayout.Label($"  … and {r.Mistakes.Count - 6} more");
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("Press R to run the drill again.");
+            GUILayout.EndArea();
+        }
+
         void EnsureStyles()
         {
             if (panelStyle != null)
                 return;
-            panelStyle = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.UpperLeft, padding = new RectOffset(10, 10, 10, 10) };
             GUI.skin.label.richText = true;
             GUI.skin.label.wordWrap = true;
+            panelStyle = new GUIStyle(GUI.skin.box) { alignment = TextAnchor.UpperLeft, padding = new RectOffset(10, 10, 10, 10) };
             instructionStyle = new GUIStyle(GUI.skin.box)
             {
                 fontSize = 20,
@@ -224,6 +326,9 @@ namespace ScenarioForge.Demo
                 alignment = TextAnchor.MiddleCenter,
                 padding = new RectOffset(16, 16, 12, 12)
             };
+            toastStyle = new GUIStyle(instructionStyle) { fontSize = 16 };
+            toastStyle.normal.textColor = new Color(1f, 0.55f, 0.55f);
+            titleStyle = new GUIStyle(GUI.skin.label) { fontSize = 20, richText = true };
         }
 
         static string StateColor(RunnerState state) => state switch
