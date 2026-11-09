@@ -120,6 +120,8 @@ It exits with code 1 when any scenario has errors.
 
 [Getting started](Packages/com.boxdevvvv.scenarioforge/Documentation~/getting-started.md) · [Custom steps](Packages/com.boxdevvvv.scenarioforge/Documentation~/creating-custom-steps.md) · [JSON format](Packages/com.boxdevvvv.scenarioforge/Documentation~/json-format.md) · [Debugging](Packages/com.boxdevvvv.scenarioforge/Documentation~/debugging.md) · [API overview](Packages/com.boxdevvvv.scenarioforge/Documentation~/api-overview.md)
 
+Design decisions behind the tool (the shared asset and the runtime copy, the JSON type binder, the rebuilt details panel) are written up in the [case study](docs/case-study.md).
+
 ## Credits and license
 
 Created by Carlos Llanquinao. Released under the [MIT license](LICENSE.md).

@@ -144,3 +144,5 @@ crashlytics-build.properties
 *.slnx
 .DS_Store
 .vscode/
+/Assets/Dev/Portfolio/
+/Assets/Dev/Portfolio.meta
