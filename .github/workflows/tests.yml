@@ -1,10 +1,10 @@
 name: Tests
 
+# Manual only: runs when started from the Actions tab ("Run workflow").
+# It needs the UNITY_LICENSE, UNITY_EMAIL and UNITY_PASSWORD secrets.
+# Tests are normally run locally in the Unity Editor before pushing.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:

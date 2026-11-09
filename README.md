@@ -1,7 +1,5 @@
 # Scenario Forge
 
-[![Tests](https://github.com/boxdevvvv/scenario-forge/actions/workflows/tests.yml/badge.svg)](https://github.com/boxdevvvv/scenario-forge/actions/workflows/tests.yml)
-
 <!-- Hero GIF placeholder: record the window authoring a scenario and the Play Mode debugger, then replace this comment with ![Scenario Forge](Packages/com.boxdevvvv.scenarioforge/Documentation~/images/hero.gif) -->
 
 Scenario Forge is an open-source Unity editor tool for **step-by-step procedures**: trainings, tutorials, linear missions and safety checklists. Designers author the steps in an editor window; the game only reports facts (signals, blackboard values, positions), and a testable runtime checks that the player does things in the right order, records mistakes and reports the result.
