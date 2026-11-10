@@ -1,12 +1,20 @@
 # Scenario Forge
 
-<!-- Hero GIF placeholder: record the window authoring a scenario and the Play Mode debugger, then replace this comment with ![Scenario Forge](Packages/com.boxdevvvv.scenarioforge/Documentation~/images/hero.gif) -->
+![The Play Mode debugger following a fire drill: each step lights up as the player does it, and the event log records signals and a mistake](Packages/com.boxdevvvv.scenarioforge/Documentation~/images/04-debugger.gif)
 
 Scenario Forge is an open-source Unity editor tool for **step-by-step procedures**: trainings, tutorials, linear missions and safety checklists. Designers author the steps in an editor window; the game only reports facts (signals, blackboard values, positions), and a testable runtime checks that the player does things in the right order, records mistakes and reports the result.
 
 - Unity **6.6** (6000.6) or newer
 - Depends only on `com.unity.nuget.newtonsoft-json`
 - MIT license
+
+## In action
+
+| Add steps from a searchable menu | Reorder by dragging, with Undo |
+| --- | --- |
+| ![Adding an Instruction and a Checklist step with search](Packages/com.boxdevvvv.scenarioforge/Documentation~/images/01-create.gif) | ![Dragging the last step to position 2, then undoing it](Packages/com.boxdevvvv.scenarioforge/Documentation~/images/02-reorder.gif) |
+| **Click a validation error, fix it, and it disappears** | **Your own step types appear in the menu** |
+| ![Selecting a step from its validation error and filling in the missing signal](Packages/com.boxdevvvv.scenarioforge/Documentation~/images/03-validation.gif) | ![A custom PressLeverStep class and the step it adds to the menu](Packages/com.boxdevvvv.scenarioforge/Documentation~/images/05-custom-step.gif) |
 
 ## Installation
 

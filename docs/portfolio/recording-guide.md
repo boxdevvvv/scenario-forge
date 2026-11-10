@@ -1,6 +1,6 @@
 # Portfolio recording guide
 
-Five short clips (5–10 s each, spec section 17) plus one hero clip for the README. Each clip shows one idea. Recordings are made in the dev project; the `Tools > Scenario Forge > Dev > Portfolio` menu prepares each shot on a throwaway copy in `Assets/Dev/Portfolio` (git-ignored), so the demo and sample assets never change.
+Five short clips (spec section 17); the debugger clip doubles as the README hero. Each clip shows one idea. Recordings are made in the dev project; the `Tools > Scenario Forge > Dev > Portfolio` menu prepares each shot on a throwaway copy in `Assets/Dev/Portfolio` (git-ignored), so the demo and sample assets never change.
 
 ## Setup (once)
 
@@ -54,12 +54,16 @@ Delete the asset after recording.
 
 Clean up with **Tools > Scenario Forge > Dev > Portfolio > Delete Shot Copies**.
 
-### Hero clip for the README (`hero`, 12–15 s)
-
-This clip combines shots 1 and 4 in one take: add two steps with search, press Play, and let the debugger show the steps advancing. It goes at the top of the README.
-
 ## Output
 
-- **Size and speed:** GIFs are 960 px wide at 12–15 fps, ideally under 5 MB each (the hero under 8 MB).
-- **Location:** `Packages/com.boxdevvvv.scenarioforge/Documentation~/images/`, named like the recordings (`hero.gif`, `01-create.gif` and so on). The README's hero placeholder already points to `Documentation~/images/hero.gif`.
+- **Size:** GIFs are 900 px wide (the debugger clip 1200 px), each well under 5 MB.
+- **Location:** `Packages/com.boxdevvvv.scenarioforge/Documentation~/images/`, named like the recordings (`01-create.gif` … `05-custom-step.gif`). The README hero is `04-debugger.gif`.
 - **Archive:** keep the original `.mov` files outside the repository.
+
+## How the published GIFs were made
+
+The GIFs in `Documentation~/images` were recorded without a screen recorder, so they can be redone the same way:
+
+1. **`PortfolioRecorder`** (`Assets/Dev/Editor`) saves numbered PNG frames of chosen editor windows, read from each window's own pixels. Popups such as the Add Step search are drawn in place. It uses the Editor's internal `GUIView.GrabPixels` through reflection, so it is dev tooling only and may need changes in a future Unity version. The mouse cursor is not captured.
+2. **`PortfolioAutopilot`** plays the Fire Drill demo in Play Mode for the debugger clip, including one deliberate mistake, so no keyboard input is needed.
+3. [`makegif.py`](makegif.py) turns the frames into GIFs with ffmpeg (Python with `imageio-ffmpeg`, `pillow` and `numpy`). Frames that only differ by a blinking caret are dropped, pauses are shortened, and a single 256-colour palette is used so error icons stay red. Clip 5 starts with a card showing the `PressLeverStep` source.

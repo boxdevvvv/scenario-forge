@@ -1,8 +1,13 @@
 {
     "name": "ScenarioForge.Dev.Editor",
     "rootNamespace": "ScenarioForge.Dev",
-    "references": [],
-    "includePlatforms": ["Editor"],
+    "references": [
+        "ScenarioForge.Runtime",
+        "ScenarioForge.Demo"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

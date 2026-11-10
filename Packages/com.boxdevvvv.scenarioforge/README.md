@@ -1,6 +1,6 @@
 # Scenario Forge
 
-<!-- Hero GIF placeholder: record the window authoring a scenario and the Play Mode debugger, then replace this comment with ![Scenario Forge](Documentation~/images/hero.gif) -->
+![The Play Mode debugger following a fire drill: each step lights up as the player does it, and the event log records signals and a mistake](Documentation~/images/04-debugger.gif)
 
 Scenario Forge is an open-source Unity editor tool for **step-by-step procedures**: trainings, tutorials, linear missions and safety checklists. Designers author the steps in an editor window; the game only reports facts (signals, blackboard values, positions), and a testable runtime checks that the player does things in the right order, records mistakes and reports the result.
 
