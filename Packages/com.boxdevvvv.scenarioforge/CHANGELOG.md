@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-09
+
+First release.
+
 ### Added
 - Package skeleton: runtime, editor and test assemblies.
 - `ScenarioDefinition`, `ScenarioStep`, `ScenarioRunner` and `ScenarioContext`: a linear runner that executes a copy of the asset, with timeouts, failure policies (fail, skip, retry), pause, skip, restart and abort.
@@ -29,3 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Play Mode debugger in the window: runner picker, live step states on each row (active with elapsed time, ✓ ✕ ↷ ⏱), auto-scroll to the active step, Pause/Resume, Skip Step, Restart and Abort, a live Blackboard tab and an Event Log tab (last 200 events, Clear and Copy). Refreshes every 100 ms.
 - Assembly Procedure sample (Package Manager > Samples): every built-in step type, uGUI buttons gated by step events, a signal listener and a result screen.
 - Package README and `Documentation~` (getting started, custom steps, JSON format, debugging, API overview).
+
+[Unreleased]: https://github.com/boxdevvvv/scenario-forge/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/boxdevvvv/scenario-forge/releases/tag/v0.1.0
